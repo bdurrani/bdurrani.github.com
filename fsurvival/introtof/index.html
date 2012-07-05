@@ -100,19 +100,19 @@
 
 <p>While billed primarily as a functional language, F# is in actuality a multi-paradigm language. This means that it supports imperative, OO, and functional styles of programming. A fully supported .NET language in its own right, F# interoperates naturally with code written in other .NET languages such as C# and VB.NET.</p>
 
-<p>F# is available as part of Microsoft Visual Studio 2010 and the Mono project. It is also available as a <a href='http://msdn.microsoft.com/en-us/vstudio/hh388569.aspx'>seperate download</a>. You can find the most recent F# Language Reference <a href='http://msdn.microsoft.com/en-us/library/dd233181'>here</a>. For this book, all the code was tested with build 4.0.40219.1 in Visual Studio 2010.</p>
+<p>F# is available as part of Microsoft Visual Studio 2010 and the Mono project. You can also use it with Visual Studio 2008, although that requires a separate download. It is also available as a <a href='http://msdn.microsoft.com/en-us/vstudio/hh388569.aspx'>seperate download</a>. You can find the most recent F# Language Reference <a href='http://msdn.microsoft.com/en-us/library/dd233181'>here</a>. For this book, all the code was tested with build 4.0.40219.1 in Visual Studio 2010.</p>
 
 <p>Please consult the language reference for the basic rules and regulations of F#, e.g. the rules around defining a valid symbolic name, etc.</p>
 
 <h2 id='f_program_structure'>F# Program Structure</h2>
 
-<p>You create F# programs using a standard text editor or IDE. With an IDE such as Visual Studio 2010, you get the benefit of syntax highlighting, IntelliSense, etc. As with other programming languages, F# adheres to a specific set of syntax and structural rules, uses a well-defined set of keywords, etc. We will cover the core keywords, syntax, and structure of F# programs starting in this chapter, and will continue to build on this knowledge throughout the rest of the text.</p>
+<p>You create F# programs using a standard text editor or IDE. With an IDE such as Visual Studio 2010, you get the benefit of syntax highlighting, Intellisense, etc. As with other programming languages, F# adheres to a specific set of syntax and structural rules, uses a well-defined set of keywords, etc. We will cover the core keywords, syntax, and structure of F# programs starting in this chapter, and will continue to build on this knowledge throughout the rest of the text.</p>
 
-<h3 id='id4'><code>#light</code></h3>
+<h3 id='id1'><code>#light</code></h3>
 
-<p>Due to its heritage, F# is compatible with OCaml. This means that you can write F# programs that are fully compliant with OCaml&#8217;s syntax and semantic rules. Many developers, however, find OCaml&#8217;s syntax to be quite <em>chatty</em> or <em>heavy</em>; therefore, F# supports a more streamlined programming syntax and semantic, known as <strong>light</strong> mode. You instruct F# to adhere to this light mode by placing the #light directive at the top of each of your F# program files.</p>
+<p>Due to its heritage, F# is compatible with OCaml. This means that you can write F# programs that are fully compliant with OCaml&#8217;s syntax and semantic rules. Many developers, however, find OCaml&#8217;s syntax to be quite <em>chatty</em>; therefore, F# supports a more streamlined programming syntax and semantic, known as <strong>light</strong> mode. You instruct F# to adhere to this light mode by placing the #light directive at the top of each of your F# program files.</p>
 
-<p>For all intents and purposes, all of the F# programs that you encounter and write will use the #light directive. If you fail to use place the #light directive at the top of each of your F# program files, you will default to OCaml-compatible <em>verbose mode.</em> This will require the use of particular keywords and symbols to terminate expressions, etc.<br />In the spirit of keeping things streamlined and to the point, we will not cover the verbose mode syntax in this book, nor will we cover structures and/or symbols that are in F# solely to support OCaml compatibility.</p>
+<p>For all intents and purposes, all of the F# programs that you encounter and write will use the <code>#light</code> directive. If you fail to use place the <code>#light</code> directive at the top of each of your F# program files, you will default to OCaml-compatible <em>verbose mode.</em> This will require the use of particular keywords and symbols to terminate expressions, etc.<br />In the spirit of keeping things streamlined and to the point, we will not cover the verbose mode syntax in this book, nor will we cover structures and/or symbols that are in F# solely to support OCaml compatibility.</p>
 
 <h3 id='whitespace_matters'>Whitespace Matters</h3>
 
@@ -157,7 +157,7 @@
 
 <h2 id='statements_vs_expressions'>Statements vs. Expressions</h2>
 
-<p>In many programming languages, there is a sharp distinction drawn between statements and expressions. It is an important distinction, since it dictates where you can use given programming structures, and how these structures are ultimately evaluated. Let&#8217;s come up with working definitions that we can rely on throughout the text:</p>
+<p>In many programming languages, there is a sharp distinction drawn between statements and expressions. It is an important distinction, since it dictates where you can use given programming structures, and how these structures are ultimately evaluated. Let&#8217;s come up with working definitions that we can rely on throughout the text.</p>
 
 <h3 id='statements'>Statements</h3>
 
@@ -183,17 +183,17 @@
 
 <h3 id='accessing_existing_net_types'>Accessing Existing .NET Types</h3>
 
-<p>In some of the examples in this book, and certainly in real-world programs, you will need to access functionality present in external libraries and modules. To gain access to the functionality contained in these libraries and modules, we use the F# keyword open.</p>
+<p>In some of the examples in this book, and certainly in real-world programs, you will need to access functionality present in external libraries and modules. To gain access to the functionality contained in these libraries and modules, we use the F# keyword <code>open</code>.</p>
 
 <h4 id='open'>open</h4>
 
-<p>The <code>open</code> keyword (like the C# using statement, brings an existing namespace into scope. This affords us the convenience of using the namespace&#8217;s interfaces, classes, etc. without having to fully qualify the names each and every time. The <code>open</code> statement is called an <em>import</em> statement, and takes the following form:</p>
+<p>The <code>open</code> keyword (like the C# using statement), brings an existing namespace into scope. This affords us the convenience of using the namespace&#8217;s interfaces, classes, etc. without having to fully qualify the names each and every time. The <code>open</code> statement is called an <em>import</em> statement, and takes the following form:</p>
 
 <p><code>open module-or-namespace</code><sup id='fnref:3'><a href='#fn:3' rel='footnote'>3</a></sup></p>
 
 <p>Here, namespace must be a valid .NET namespace &#8211; either a built-in namespace or one of your creation (or third-party creation). Note that to gain access to a given namespace, you must have a reference to the proper .NET type-container such as a DLL, e.g., System.Windows.Forms.dll. If the IDE reports that it cannot resolve an open expression, make sure you have a reference to the DLL containing the namespace you&#8217;re trying to open.</p>
 
-<p>Let&#8217;s look at an example. To gain access to the classes in the .NET System namespace, we can either fully qualify the name, e.g., <code>System.Environment</code>, or we can open the <code>System</code> namespace and use the Environment class without qualification. The following example demonstrates the difference:</p>
+<p>Let&#8217;s look at an example. To gain access to the classes in the .NET System namespace, we can either fully qualify the name, e.g., System.Environment, or we can open the System namespace and use the Environment class without qualification. The following example demonstrates the difference:</p>
 <figure class='code'><figcaption><span>Without using open </span></figcaption>
  <div class='highlight'><table><tr><td class='gutter'><pre class='line-numbers'><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='ocaml'><span class='line'><span class='k'>let</span> <span class='n'>fpath</span> <span class='o'>=</span> <span class='nn'>System</span><span class='p'>.</span><span class='nn'>Environment</span><span class='p'>.</span><span class='nc'>GetFolderPath</span><span class='o'>(</span><span class='nn'>System</span><span class='p'>.</span><span class='nn'>Environment</span><span class='p'>.</span><span class='nn'>SpecialFolder</span><span class='p'>.</span><span class='nc'>Desktop</span><span class='o'>)</span>
@@ -215,23 +215,15 @@
 
 <p>There are certain namespaces that are so common that F# makes them available automatically. These are as follows:</p>
 
-<dl>
-<dt>Microsoft.FSharp.Core</dt>
+<p><strong>Microsoft.FSharp.Core</strong>: Contains basic F# type definitions for built-in types such as int and double.</p>
 
-<dd>Contains basic F# type definitions for built-in types such as int and double.</dd>
+<p><strong>Microsoft.FSharp.Core.Operators</strong>: Contains core arithmetic operations such as + for addition and * for multiplication.</p>
 
-<dt>Microsoft.FSharp.Core.Operators</dt>
+<p><strong>Microsoft.FSharp.Collections</strong>:Contains immutable collection classes such as List and Array.</p>
 
-<dd>Contains core arithmetic operations such as + for addition and * for multiplication.</dd>
-</dl>
+<p><strong>Microsoft.FSharp.Control</strong>:Contains types for control constructs such as lazy evaluation and asynchronous workflows (covered later).</p>
 
-<ul>
-<li>Microsoft.FSharp.Collections - Contains immutable collection classes such as List and Array.</li>
-
-<li>Microsoft.FSharp.Control * Contains types for control constructs such as lazy evaluation and asynchronous workflows (covered later).</li>
-
-<li>Microsoft.FSharp.Text * Contains functions for formatted IO, such as the <code>printfn</code> function.</li>
-</ul>
+<p><strong>Microsoft.FSharp.Text</strong>:Contains functions for formatted IO, such as the <code>printfn</code> function.</p>
 
 <p>Your F# programs can use the publicly available constructs from these default libraries without using an open statement and without fully qualifying their names.</p>
 
@@ -267,7 +259,9 @@
 </span><span class='line'>></span></code></pre></td></tr></table></div></figure>
 <p>Don&#8217;t worry too much about the feedback. Here F# is telling us that the expression it just evaluated (the <em>it</em>) returned F#&#8217;s equivalent of void (unit, also expressed as ()). We&#8217;ll cover these concepts shortly.</p>
 
-<p>Note that F# is a case-sensitive language, i.e., case is significant. You cannot, for example, enter PRINTFN &#8220;hello, world!&#8221;;;. F# will produce an error letting you know that PRINTFN is not a recognized command or function:<br />error FS0039: The value or constructor &#8216;Printfn&#8217; is not defined.</p>
+<p>Note that F# is a case-sensitive language, i.e., case is significant. You cannot, for example, enter <code>PRINTFN &quot;hello, world!&quot;</code>;;. F# will produce an error letting you know that PRINTFN is not a recognized command or function:</p>
+
+<p><code>error FS0039: The value or constructor &#39;Printfn&#39; is not defined.</code></p>
 
 <p>While using the F# Interactive Console, it&#8217;s easy to forget to terminate your expressions using ;;.If you forget to do this, here is what you&#8217;ll see:</p>
 <figure class='code'><figcaption><span>Not terminating the expressions </span></figcaption>
@@ -288,7 +282,7 @@
 </span><span class='line'>it's me
 </span><span class='line'>></span></code></pre></td></tr></table></div></figure>
 <p>The F# Interactive Console has a handful of directives that it understands. For a list of these directives, enter <code>#help;;</code> at the command prompt (&gt;), as shown below:</p>
-<figure class='code'><figcaption><span>Multiple expressions </span></figcaption>
+<figure class='code'><figcaption><span>Help directive </span></figcaption>
 <div class='highlight'><table><tr><td class='gutter'><pre class='line-numbers'><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -344,7 +338,7 @@
 
 <p>We use the <code>#path</code> command to extend the search path that F# uses in order to find libraries and assemblies, and the #load command to load an F# file into memory, compile it, and make it available for use.</p>
 
-<p>We can use the <code>#time</code> command to activate basic profiling for F# expressions, measuring their execution times. For example, Issue the <code>#time</code> &#8220;on&#8221; command to activate profiling, and <code>#time</code> &#8220;off&#8221; to deactivate it. We use both in the following example:</p>
+<p>We can use the <code>#time</code> command to activate basic profiling for F# expressions, measuring their execution times. For example, Issue the <code>#time &quot;on&quot;</code> command to activate profiling, and <code>#time &quot;off&quot;</code> to deactivate it. We use both in the following example:</p>
 <figure class='code'><div class='highlight'><table><tr><td class='gutter'><pre class='line-numbers'><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -375,21 +369,21 @@
 
 <p>At the time of this writing, there is no way to use the F# Interactive Console to get help on a keyword or built-in function.</p>
 
-<p>If you want to influence how the F# Interactive Console behaves, you can launch it yourself and provide command-line switches. For example, if you want to launch the console so that standard output is suppressed, provide the &#8211;quiet switch.</p>
+<p>If you want to influence how the F# Interactive Console behaves, you can launch it yourself and provide command-line switches. For example, if you want to launch the console so that standard output is suppressed, provide the -quiet switch.</p>
 
-<p>For a full list of all the switches available, enter <em>fsi &#8211;help</em> on the standard command line.</p>
+<p>For a full list of all the switches available, enter <em>fsi -help</em> on the standard command line.</p>
 
 <p>Unfortunately, once the F# Interactive Console is up and running, there doesn&#8217;t seem to be a way to reset its environment to eliminate all bound references, etc. When I need to do this, I generally close my current session and start anew.</p>
 
 <p>When you enter something the F# does not understand completely, it will display an error message in red text, as shown below:</p>
-<img class='center' src='/images/fsurvival/consoleerror.png' />
+<img class='center' src='/images/fsurvival/consoleerror.PNG' />
 <p>You will receive error output even if you are running in quiet mode; however, that is the extent of the console&#8217;s debugging capabilities. The F# Interactive Console does not have a provision for debugging F# code snippets. To debug scripts or programs, you need to use the full Visual Studio IDE and debugger.</p>
 
 <p>Once you&#8217;re done using the F# Interactive Console, you can exit by closing the console window or by executing the <code>#quit;;</code> command.</p>
 
 <h3 id='f_interactive_console_and_visual_studio'>F# Interactive Console and Visual Studio</h3>
 
-<p>If you have Visual Studio installed, and you install F#, F# will integrate with Visual Studio by adding a set of project templates and a handful of new menu items. These changes enable you to create F# solutions and projects, and to use the Visual Studio IDE and the F# Interactive Console in unison. To display the F# Interactive Console in Visual Studio 2008 or higher, go the main menu and select View -&gt; Other Windows -&gt; F# Interactive. One convenient feature the integrated console window supports is the ability for you to reset its environment: right-click your mouse over the window and select Reset Session from the context menu.</p>
+<p>F# is already included as part of Visual Studio 2010. If you have Visual Studio 2008 installed, you will need to install F# separetly. Once you have F#, it will integrate with Visual Studio by adding a set of project templates and a handful of new menu items. These changes enable you to create F# solutions and projects, and to use the Visual Studio IDE and the F# Interactive Console in unison. To display the F# Interactive Console in Visual Studio 2008 or higher, go the main menu and select View -&gt; Other Windows -&gt; F# Interactive. One convenient feature the integrated console window supports is the ability for you to reset its environment: right-click your mouse over the window and select Reset Session from the context menu.</p>
 
 <p>The best and easiest way to work with the integrated console is to develop code in the IDE editor, select it, and then right-click the mouse over the selection to bring up the editor&#8217;s context menu. If you select the menu item Send to Interactive, Visual Studio will send the selected code to the integrated F# Interactive Console, and will automatically append a ;; to the end of the entire block, which you use to terminate a set of statements in the console window. In response, the console will execute the F# code and provide immediate feedback.</p>
 
@@ -400,7 +394,7 @@
 <h3 id='f_projects_in_visual_studio'>F# Projects in Visual Studio</h3>
 
 <p>After installing F#, you will find that Visual Studio offers a new set of project templates. This is what the New Project window looks like on my machine:</p>
-<img class='center' src='/images/fsurvival/newproject.png' />
+<img class='center' src='/images/fsurvival/newproject.PNG' />
 <p>Visual Studio offers the following project types:</p>
 
 <ul>
@@ -414,7 +408,7 @@
 <ul>
 <li>Module1.fs. This is the default source file for the library that will be compiled into the output DLL.</li>
 
-<li>Scritp.fsx. This is a script file that you can use to work with F# interactively. The code that you enter into this file is not included in the final output DLL.</li>
+<li>Script.fsx. This is a script file that you can use to work with F# interactively. The code that you enter into this file is not included in the final output DLL.</li>
 </ul>
 </li>
 
@@ -429,7 +423,7 @@
 
 <p>When you use Visual Studio to build an F# application, it executes the underlying F# compiler, fsc.exe.</p>
 
-<p>Like any other .NET compiler, the F# compiler supports a variety of configuration options. For more information about the F# compiler and its options, please see the F# compiler documentation on MSDN.</p>
+<p>Like any other .NET compiler, the F# compiler supports a variety of configuration options. For more information about the F# compiler and its options, please see the <a href='http://msdn.microsoft.com/en-us/library/dd233171.aspx'>F# compiler documentation on MSDN</a>.</p>
 
 <h3 id='printing_values_using_printf'>Printing Values using Printf</h3>
 
@@ -471,26 +465,12 @@
     <a href='\fsurvival\toc'>Main</a>    
     </li>
 </ul><div class='footnotes'><hr /><ol><li id='fn:1'>
-<p>If you are not using the #light directive, you are defaulting to using full OCaml syntax, which obviates the need for significant whitespace, but imposes the burden of semantically significant keywords.</p>
+<p>If you are not using the <code>#light</code> directive, you are defaulting to using full OCaml syntax, which obviates the need for significant whitespace, but imposes the burden of semantically significant keywords.</p>
 <a href='#fnref:1' rev='footnote'>&#8617;</a></li><li id='fn:2'>
 <p>Python programmers will feel at home here.</p>
 <a href='#fnref:2' rev='footnote'>&#8617;</a></li><li id='fn:3'>
 <p>In F#, a module is a way to package code. It is a grouping of F# code, such as values, types, and function values. Grouping code in modules helps keep related code together and helps avoid name conflicts in your program. We will cover modules later.</p>
 <a href='#fnref:3' rev='footnote'>&#8617;</a></li></ol></div>
-  
-    <footer>
-      
-      
-        <div class="sharing">
-  
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bdurrani.github.com/fsurvival/introtof/index.html" data-via="" data-counturl="http://bdurrani.github.com/fsurvival/introtof/index.html" >Tweet</a>
-  
-  
-  
-</div>
-
-      
-    </footer>
   
 </article>
 
