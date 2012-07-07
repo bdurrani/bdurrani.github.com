@@ -3,6 +3,26 @@ li.right
     float: right;
     margin-right: 5px;
     margin-left: 5px;
-    display :inline;
+    display: inline;
 }
-    
+
+
+li.left
+{
+    float: center;
+    margin-right: 5px;
+    margin-left: 5px;
+    display: inline;
+}
+
+nav ul
+{
+    list-style-type: none;
+    float: right;
+}
+
+    nav ul li
+    {
+        display: inline;
+        list-style-type: none;
+    }

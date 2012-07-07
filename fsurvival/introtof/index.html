@@ -9,7 +9,7 @@
   <meta name="author" content="Bilal Durrani">
 
   
-  <meta name="description" content="Introduction to F# & Essential Tools next | previous | Main Introduction In this chapter, we introduce the F# language and learn how to get our &hellip;">
+  <meta name="description" content="Introduction to F# & Essential Tools Main | Next | Previous Introduction In this chapter, we introduce the F# language and learn how to get our &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -73,23 +73,24 @@
     
   </header>
   
-  <link href='/stylesheets/fsurvival.css' rel='stylesheet' type='text/css' /><ul style='list-style:none'>
-<li class='right'>
-<a href='\fsurvival\next'>next</a>
-</li>
-<li style='float: right'>
- | 
-</li>
-    <li class='right'>
-<a href='\fsurvival\whatisfunctional'>previous</a>
-    </li>
-    <li style='float:right'>
-    |
-    </li>
-    <li class='right'>
-    <a href='\fsurvival\toc'>Main</a>    
-    </li>
-</ul>
+  <link href='/stylesheets/fsurvival.css' rel='stylesheet' type='text/css' /><nav>
+    <ul>
+        <li>
+            <a href='\fsurvival\toc'>Main</a>
+        </li>
+        <li>
+            |
+        </li>
+        <li>
+            <a href='\fsurvival\next'>Next</a>
+        </li>
+        <li>| 
+        </li>
+        <li>
+            <a href='\fsurvival\whatisfunctional'>Previous</a>
+        </li>
+    </ul>
+</nav>
 <h2 id='introduction'>Introduction</h2>
 
 <p>In this chapter, we introduce the F# language and learn how to get our first program up and running. In doing so, we will discuss the basic rules around F# program structure and the essential tools you will need to develop rudimentary applications. As we progress through the book, and our experience grows, we will delve more deeply into code examples, tool examples, etc.</p>
@@ -108,7 +109,7 @@
 
 <p>You create F# programs using a standard text editor or IDE. With an IDE such as Visual Studio 2010, you get the benefit of syntax highlighting, Intellisense, etc. As with other programming languages, F# adheres to a specific set of syntax and structural rules, uses a well-defined set of keywords, etc. We will cover the core keywords, syntax, and structure of F# programs starting in this chapter, and will continue to build on this knowledge throughout the rest of the text.</p>
 
-<h3 id='id1'><code>#light</code></h3>
+<h3 id='id31'><code>#light</code></h3>
 
 <p>Due to its heritage, F# is compatible with OCaml. This means that you can write F# programs that are fully compliant with OCaml&#8217;s syntax and semantic rules. Many developers, however, find OCaml&#8217;s syntax to be quite <em>chatty</em>; therefore, F# supports a more streamlined programming syntax and semantic, known as <strong>light</strong> mode. You instruct F# to adhere to this light mode by placing the #light directive at the top of each of your F# program files.</p>
 
@@ -383,7 +384,7 @@
 
 <h3 id='f_interactive_console_and_visual_studio'>F# Interactive Console and Visual Studio</h3>
 
-<p>F# is already included as part of Visual Studio 2010. If you have Visual Studio 2008 installed, you will need to install F# separetly. Once you have F#, it will integrate with Visual Studio by adding a set of project templates and a handful of new menu items. These changes enable you to create F# solutions and projects, and to use the Visual Studio IDE and the F# Interactive Console in unison. To display the F# Interactive Console in Visual Studio 2008 or higher, go the main menu and select View -&gt; Other Windows -&gt; F# Interactive. One convenient feature the integrated console window supports is the ability for you to reset its environment: right-click your mouse over the window and select Reset Session from the context menu.</p>
+<p>F# is already included as part of Visual Studio 2010. If you have Visual Studio 2008 installed, you will need to install F# separetly. Once you have F#, it will integrate with Visual Studio by adding a set of project templates and a handful of new menu items. These changes enable you to create F# solutions and projects, and to use the Visual Studio IDE and the F# Interactive Console in unison. To display the F# Interactive Console in Visual Studio 2008 or higher, go the main menu and select View -&gt; Other Windows -&gt; F# Interactive. One convenient feature the integrated console window supports is the ability for you to reset its environment: right-click your mouse over the window and select <strong>Reset Session</strong> from the context menu.</p>
 
 <p>The best and easiest way to work with the integrated console is to develop code in the IDE editor, select it, and then right-click the mouse over the selection to bring up the editor&#8217;s context menu. If you select the menu item Send to Interactive, Visual Studio will send the selected code to the integrated F# Interactive Console, and will automatically append a ;; to the end of the entire block, which you use to terminate a set of statements in the console window. In response, the console will execute the F# code and provide immediate feedback.</p>
 
@@ -448,29 +449,27 @@
 
 <li>Using Visual Studio, you can create console applications, libraries (DLLs) and applications (EXEs) with F#, just like you would do with other .NET languages.<br />You can even link and execute modules compiled from F# seamlessly with modules written in other .NET languages.</li>
 </ul>
-<ul style='list-style:none'>
-<li class='right'>
-<a href='\fsurvival\next'>next</a>
-</li>
-<li style='float: right'>
- | 
-</li>
-    <li class='right'>
-<a href='\fsurvival\whatisfunctional'>previous</a>
-    </li>
-    <li style='float:right'>
-    |
-    </li>
-    <li class='right'>
-    <a href='\fsurvival\toc'>Main</a>    
-    </li>
-</ul><div class='footnotes'><hr /><ol><li id='fn:1'>
+<a href='#introduction'>Back to top</a><div class='footnotes'><hr /><ol><li id='fn:1'>
 <p>If you are not using the <code>#light</code> directive, you are defaulting to using full OCaml syntax, which obviates the need for significant whitespace, but imposes the burden of semantically significant keywords.</p>
 <a href='#fnref:1' rev='footnote'>&#8617;</a></li><li id='fn:2'>
 <p>Python programmers will feel at home here.</p>
 <a href='#fnref:2' rev='footnote'>&#8617;</a></li><li id='fn:3'>
 <p>In F#, a module is a way to package code. It is a grouping of F# code, such as values, types, and function values. Grouping code in modules helps keep related code together and helps avoid name conflicts in your program. We will cover modules later.</p>
 <a href='#fnref:3' rev='footnote'>&#8617;</a></li></ol></div>
+  
+    <footer>
+      
+      
+        <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bdurrani.github.com/fsurvival/introtof/index.html" data-via="" data-counturl="http://bdurrani.github.com/fsurvival/introtof/index.html" >Tweet</a>
+  
+  
+  
+</div>
+
+      
+    </footer>
   
 </article>
 
