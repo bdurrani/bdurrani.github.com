@@ -1,0 +1,347 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Numeric Types and Operations - My blog</title>
+  <meta name="author" content="Bilal Durrani">
+
+  
+  <meta name="description" content="Numeric Types and Operations Main | Next | Previous Introduction In this chapter we will start to discuss data types. To keep things simple (F# has &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://bdurrani.github.com/fsurvival/numerictypes/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="My blog" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   class="no-sidebar"  >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My blog</a></h1>
+  
+    <h2>My attempts</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:bdurrani.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+<li><a href="/">Blog</a></li>
+<!--  
+      <li><a href="/blog/archives">Archives</a></li>
+-->
+   <li> <a href="/fsurvival/preface">F# Survival Guide</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article role="article">
+  
+  <header>
+    <h1 class="entry-title">Numeric Types and Operations</h1>
+    
+  </header>
+  
+  <link href='/stylesheets/fsurvival.css' rel='stylesheet' type='text/css' /><nav>
+    <ul>
+        <li>
+            <a href='\fsurvival\toc'>Main</a>
+        </li>
+        <li>|
+        </li>
+        <li>
+            <a href='\fsurvival\next'>Next</a>
+        </li>
+        <li>| 
+        </li>
+        <li>
+            <a href='\fsurvival\introtof'>Previous</a>
+        </li>
+    </ul>
+</nav>
+<h2 id='introduction'>Introduction</h2>
+
+<p>In this chapter we will start to discuss data types. To keep things simple (F# has many data types, which we will explore in detail), we will focus our discussion on numeric types only. This will provide a good introduction to F#&#8217;s typing system, and will provide a context for discussing type-related constructs.</p>
+
+<h2 id='what_are_data_types'>What are Data Types?</h2>
+
+<p>Data types provide a way for us to tell F# how to treat and handle given data elements. When you associate an element with a data type, you&#8217;re defining the range of values that the element can assume and the operations in which the element can participate. From the perspective of data types, programming languages are divided into two broad categories:</p>
+
+<ul>
+<li>Dynamically-typed, a.k.a., weakly typed, languages</li>
+
+<li>Statically-typed, a.k.a., strongly typed languages</li>
+</ul>
+
+<p>While a discussion of the pros and cons of each category is beyond the scope of this book, we need to note that <strong>F# is a strongly typed language</strong>. This means that every data element, value, and expression has a valid, well-known type that is fixed when the source code is compiled, i.e., its type cannot vary at run time.</p>
+
+<p>Even though F# is a strongly typed language, F# source code only sometimes requires explicit type declarations for symbols. This is because F# employs <a href='http://msdn.microsoft.com/en-us/library/dd233180.aspx'>type inference</a>, which is a mechanism by which F# deduces data types based on implicit contextual information in the source code.</p>
+
+<h2 id='numeric_literals'>Numeric Literals</h2>
+
+<p>Numeric literals in F# are just like numeric literals in most other languages - literal numbers like 4 and 7.1. You can tell exactly what type a numeric literal is from how it is written. In most cases, the letter(s) at the end of the number will determine the type.</p>
+
+<p>F# can represent individual bytes, small integers, large integers, floating point values of varying precision, etc. It even supports direct expression of Decimal and Big number types found in .NET languages, but not available in many other languages. Table 3.1 below summarizes each of F#&#8217;s numeric data types, along with the F# keyword you can use to define them. Also shown is the type symbol that you can use to force a literal to be interpreted explicitly. The Comment column describes each type&#8217;s internal representation.</p>
+<table class='local'>
+    <caption>Table 3.1: F# primitive data types</caption>
+    <tr>
+        <th>Informal Name</th>
+        <th>F# Type Keyword</th>
+        <th>Type Designation Symbol</th>
+        <th>Example Numeric Literals</th>
+        <th>Comment</th>
+    </tr>
+    <tr>
+        <td>Signed byte</td>
+        <td><code>sbyte</code></td>
+        <td>y</td>
+        <td>3y</td>
+        <td><em>1 byte with a sign bit</em></td>
+    </tr>
+    <tr>
+        <td>Unsigned byte</td>
+        <td><code>byte</code></td>
+        <td>uy</td>
+        <td>5uy</td>
+        <td><em>1 byte with no sign bit</em></td>
+    </tr>
+    <tr>
+        <td>Short</td>
+        <td><code>int16</code></td>
+        <td>s</td>
+        <td>15s</td>
+        <td><em>2 bytes with a sign bit</em></td>
+    </tr>
+    <tr>
+        <td>Unsigned short</td>
+        <td><code>uint16</code></td>
+        <td>us</td>
+        <td>100us</td>
+        <td><em>2 bytes with no sign bit</em></td>
+    </tr>
+    <tr>
+        <td>Integer</td>
+        <td><code>int</code></td>
+        <td>(none)</td>
+        <td>123</td>
+        <td><em>4 bytes with a sign bit</em></td>
+    </tr>
+    <tr>
+        <td>Unsigned integer</td>
+        <td><code>uint32</code></td>
+        <td>u</td>
+        <td>123u</td>
+        <td><em>4 bytes with no sign bit</em></td>
+    </tr>
+    <tr>
+        <td>Long</td>
+        <td><code>int64</code></td>
+        <td>L</td>
+        <td>9999L</td>
+        <td><em>8 bytes with a sign bit</em></td>
+    </tr>
+    <tr>
+        <td>Unsigned long</td>
+        <td><code>uint64</code></td>
+        <td>UL</td>
+        <td>9999UL</td>
+        <td><em>8 bytes with no sign bit</em></td>
+    </tr>
+    <tr>
+        <td>Float or double</td>
+        <td><code>float</code> <em>or</em> <code>double</code></td>
+        <td>(optional) e</td>
+        <td>2., 1.01, 1.01e10</td>
+        <td><em>8 bytes with a sign bit</em></td>
+    </tr>
+    <tr>
+        <td>Single</td>
+        <td><code>float32</code> <em>or</em> <code>single</code></td>
+        <td>f, (optional) e</td>
+        <td>1.0f, 1.01f, 1.01e10f</td>
+        <td><em>4 bytes with a sign bit</em></td>
+    </tr>
+    <tr>
+        <td>Native int</td>
+        <td><code>nativeint</code></td>
+        <td>n</td>
+        <td>123n</td>
+        <td><em>Maps to</em> <code>System.IntPtr</code>.<em>Size is platform specific</em></td>
+    </tr>
+    <tr>
+        <td>Unsigned native int</td>
+        <td><code>unativeint</code></td>
+        <td>un</td>
+        <td>123un</td>
+        <td><em>Maps to</em> <code>System.UIntPtr</code>.<em>Size is platform specific</em></td>
+    </tr>
+    <tr>
+        <td>Decimal</td>
+        <td><code>decimal</code></td>
+        <td>m</td>
+        <td>123m</td>
+        <td><em>Maps to</em> <code>System.Decimal</code>.<em>Appropriate for financial calculations</em></td>
+    </tr>
+    <tr>
+        <td>Big number</td>
+        <td><code>bugnum</code></td>
+        <td>I</td>
+        <td>123I</td>
+        <td><em>Maps to Microsoft.FSharp.Math.Bigint</em></td>
+    </tr>
+</table>
+<p>When you suffix a numeric constant with one of the type designation symbols, as shown above, you’re instructing the compiler to treat the literal as that exact type. For example, F# normally interprets the literal 100 to be a 32-bit integer. If we want to treat the value as a short (16-bit value), we would write 100s.</p>
+
+<p>Of course, F# supports a variety of other data types, including Booleans, characters, strings, records, etc. We will explore each of these data types in subsequent chapters.</p>
+
+<h2 id='expressing_numbers_in_alternate_bases'>Expressing Numbers in Alternate Bases</h2>
+
+<p>F# supports expressing numbers in alternate bases including hexadecimal, octal and binary. Expressing a number in an alternative base does not change the type of the number - it simply changes its form.</p>
+
+<h3 id='hex'>Hex</h3>
+
+<p>To express a number in hex, prefix the value with 0x or 0X, e.g., 0x7F, 0XAA.</p>
+
+<h3 id='octal'>Octal</h3>
+
+<p>To express a number in octal, prefix the value with 0o, (a zero followed by a lowercase <em>o</em>), e.g., 0o123 (kind of weird).</p>
+
+<h3 id='binary'>Binary</h3>
+
+<p>To express a number in binary, prefix the value with 0b or 0B, e.g., 0b1001, 0B1100.</p>
+
+<h2 id='variables_vs_value_binding'>Variables vs. Value Binding</h2>
+
+<p>In many functional programming languages, including F#, we make a semantic distinction between variables and values.</p>
+
+<p>In imperative and OO languages, we normally think of variables as labels for computer memory areas that change over time. When the assignment statement <code>a = 3</code> is executed in most languages, the memory storage location called <code>a</code> has its bits changed to the bits for the value 3. This is standard operating procedure in imperative and OO systems.</p>
+
+<p>In contrast to variables, F# prefers the terminology values or value bindings. In F#, when you execute <code>let a = 3</code>, you have to think of the symbol, <code>a</code>, as being a pointer that is changed to point to the new value, <code>3</code>. Executing the statement changes the pointer, not the memory storage it points to. The old value that <code>a</code> pointed to was not overwritten! (If it is not bound to any other symbol, the memory where it was stored will be garbage collected at some point.) We thus say <em>a is bound to the value 3</em>, not <em>a is changed to the value 3</em>. The difference between variables and value binding is that a value is considered constant (read-only - never overwritten), whereas a variable is expected to change (be overwritten).</p>
+
+<p>The concept of value binding supports one of the bedrock tenets of functional programming: no side effects. One way to achieve <em>no side effects</em> is to discourage (as in F#) or prevent (as in other functional languages like Haskell) a value from changing during assignment. You may be wondering how on earth you can write <em>real</em> software without side-effects. I ask that you suspend disbelief for a short amount of time and trust that it&#8217;s possible, and that F# also provides mechanisms that enable &#8220;normal&#8221; variable-like behavior.</p>
+
+<h2 id='_there_be_values'><code>let</code> There be Values</h2>
+
+<p>Now that we understand the difference between variables and values<sup id='fnref:1'><a href='#fn:1' rel='footnote'>1</a></sup>, it makes sense to discuss how to define values and initialize them. This is the role of the keyword <code>let</code>, one of the most oft-used keywords in F#. With respect to values, the let keyword performs two jobs:</p>
+
+<ul>
+<li><code>let</code> binds a symbol to a data value.</li>
+
+<li><code>let</code> introduces a new symbol scope.</li>
+</ul>
+
+<p>Let&#8217;s (no pun intended) take a look at an example:</p>
+<figure class='code'><figcaption><span /></figcaption><div class='highlight'><table><tr><td class='gutter'><pre class='line-numbers'><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ocaml'><span class='line'><span class='k'>let</span> <span class='n'>n</span> <span class='o'>=</span> <span class='mi'>123</span>          <span class='o'>//</span> <span class='n'>n</span> <span class='n'>is</span> <span class='n'>a</span> <span class='n'>value</span><span class='o'>.</span> <span class='k'>let</span> <span class='n'>binds</span> <span class='n'>the</span> <span class='n'>symbol</span> <span class='n'>n</span> <span class='k'>to</span> <span class='n'>the</span> <span class='n'>integer</span> <span class='mi'>123</span><span class='o'>.</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>If you wanted to test this using the F# Interactive Console, you would type</p>
+<figure class='code'><figcaption><span /></figcaption><div class='highlight'><table><tr><td class='gutter'><pre class='line-numbers'><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ocaml'><span class='line'><span class='k'>let</span> <span class='n'>n</span> <span class='o'>=</span> <span class='mi'>123</span><span class='o'>;;</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>Note the ;;<sup id='fnref:2'><a href='#fn:2' rel='footnote'>2</a></sup></p>
+
+<p>Note that in neither of these examples did we specify the type of the value <code>n</code>. F# uses contextual clues and type inference to figure out that <code>n</code> is an integer. In this case, the type system had it pretty easy, since the data <code>123</code> is an integer.</p>
+
+<p>Once symbols are bound, their values cannot change. The only way to change the value of a bound symbol is to assign it a brand new value. The following code assigns the symbol <code>x</code> to one value, then subsequently reassigns it to a new value. The old value is abandoned, as is the original symbol&#8217;s type.</p>
+<figure class='code'><figcaption><span /></figcaption><div class='highlight'><table><tr><td class='gutter'><pre class='line-numbers'><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ocaml'><span class='line'><span class='k'>let</span> <span class='n'>x</span> <span class='o'>=</span> <span class='mi'>123</span><span class='o'>;;</span>        <span class='o'>//</span> <span class='n'>x</span> <span class='n'>is</span> <span class='n'>bound</span> <span class='k'>to</span> <span class='mi'>123</span><span class='o'>,</span> <span class='n'>it&#39;s</span> <span class='k'>type</span> <span class='n'>is</span> <span class='n'>integer</span><span class='o'>.</span>
+</span><span class='line'><span class='k'>let</span> <span class='n'>x</span> <span class='o'>=</span> <span class='mi'>456</span><span class='o'>.</span><span class='mi'>0</span><span class='o'>;;</span>      <span class='o'>//</span> <span class='n'>x</span> <span class='n'>is</span> <span class='n'>now</span> <span class='n'>bound</span> <span class='k'>to</span> <span class='n'>value</span> <span class='mi'>456</span><span class='o'>.</span><span class='mi'>0</span><span class='o'>,</span> <span class='n'>it&#39;s</span> <span class='k'>type</span> <span class='n'>is</span> <span class='kt'>float</span>
+</span><span class='line'><span class='k'>let</span> <span class='n'>x</span> <span class='o'>=</span> <span class='n'>x</span> <span class='o'>+</span> <span class='mi'>1</span><span class='o'>.</span><span class='mi'>0</span><span class='o'>;;</span>    <span class='o'>//</span> <span class='n'>x</span> <span class='n'>is</span> <span class='n'>now</span> <span class='n'>bound</span> <span class='k'>to</span> <span class='n'>value</span> <span class='mi'>457</span><span class='o'>.</span><span class='mi'>0</span><span class='o'>,</span> <span class='n'>it&#39;s</span> <span class='k'>type</span> <span class='n'>is</span> <span class='kt'>float</span><span class='o'>.</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>In the last line, the x that is declared on the left hand side of the = sign is considered to be a new symbol. It has the same name as a previously defined symbol and thus supersedes it. The old memory location referenced by the original x (456.0) still exists, but it is no longer controlled through x. This memory is essentially abandoned and will be reclaimed by the garbage collector.</p>
+
+<p><code>let</code> supports a convenient syntax for assigning to multiple identifiers on a single line:</p>
+<figure class='code'><figcaption><span /></figcaption><div class='highlight'><table><tr><td class='gutter'><pre class='line-numbers'><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ocaml'><span class='line'><span class='k'>let</span> <span class='n'>a</span><span class='o'>,</span> <span class='n'>b</span> <span class='o'>=</span> <span class='mi'>100</span><span class='o'>,</span> <span class='mi'>200</span>     <span class='o'>//</span> <span class='n'>a</span><span class='o'>=</span><span class='mi'>100</span><span class='o'>,</span> <span class='n'>b</span><span class='o'>=</span><span class='mi'>200</span>
+</span><span class='line'><span class='k'>let</span> <span class='n'>x</span><span class='o'>,</span> <span class='n'>y</span><span class='o'>,</span> <span class='n'>z</span> <span class='o'>=</span> <span class='mi'>5</span><span class='o'>,</span> <span class='mi'>4</span><span class='o'>,</span> <span class='mi'>3</span>   <span class='o'>//</span> <span class='n'>x</span><span class='o'>=</span><span class='mi'>5</span><span class='o'>,</span> <span class='n'>y</span><span class='o'>=</span><span class='mi'>4</span><span class='o'>,</span> <span class='n'>z</span><span class='o'>=</span><span class='mi'>3</span>
+</span></code></pre></td></tr></table></div></figure><a href='#introduction'>Back to top</a><div class='footnotes'><hr /><ol><li id='fn:1'>
+<p>I may inadvertently use the term variable in some parts of the text. This comes from 20 plus years of developing software. Please consider the term synonymous with symbol when I use it.</p>
+<a href='#fnref:1' rev='footnote'>&#8617;</a></li><li id='fn:2'>
+<p>I will use both forms of example throughout the text. Keep in mind that expressions ending in ;; are from the F# Interactive Console.</p>
+<a href='#fnref:2' rev='footnote'>&#8617;</a></li></ol></div>
+  
+    <footer>
+      
+      
+        <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bdurrani.github.com/fsurvival/numerictypes/index.html" data-via="" data-counturl="http://bdurrani.github.com/fsurvival/numerictypes/index.html" >Tweet</a>
+  
+  
+  
+</div>
+
+      
+    </footer>
+  
+</article>
+
+</div>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Bilal Durrani -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
