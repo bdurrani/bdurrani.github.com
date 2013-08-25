@@ -75,8 +75,9 @@ ul.posts span {
 }
 
 .site .header h1.title a {
-  color: #a00;
+  color: #a00; 
 }
+
 
 .site .header h1.title a:hover {
   color: #000;
@@ -86,9 +87,16 @@ ul.posts span {
   color: #aaa;
   margin-left: 1em;
 }
+.header a.visited {
+    color: #00a;
+}
 
 .site .header a.extra:hover {
   color: #000;
+}
+ 
+.container .banner h1.title a:visited {
+    color: #00a;
 }
 
 .site .meta {
