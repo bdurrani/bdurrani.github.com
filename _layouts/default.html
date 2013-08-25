@@ -8,19 +8,23 @@
     <link href='http://fonts.googleapis.com/css?family=Bitter:400,700,400italic' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="/css/bootstrap.css" media="screen">
     <!-- syntax highlighting CSS -->
-    <link rel="stylesheet" href="/css/syntax.css">
-
+    <link rel="stylesheet" href="/css/syntax.css"> 
     <!-- Custom CSS -->
-<!--    <link rel="stylesheet" href="/css/main.css">-->
+    <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
 
     <div class="container">
-        <header role="banner">
-
-                <h1 class="title"><a href="/">{{ site.name }}</a></h1>
-            
-        </header>
+        <nav class="navbar navbar-default" role="banner">
+            <ul class="nav nav-pills pull-right">
+                <li><a href="/about.html">about</a></li>
+                <li><a href="/blog/">blog</a></li>
+                <li><a title="code" href="http://github.com/bdurrani">
+                    <i class="icon-github"></i>
+                </a></li>
+            </ul>
+            <a class="navbar-brand" href="/">{{ site.name }}</a>
+        </nav>
         <div class="site">
 <!--            <div class="header">
                 <h1 class="title"><a href="/">{{ site.name }}</a></h1>
@@ -30,17 +34,6 @@
             {{ content }}
 
             <div class="footer">
-                <div class="contact">
-                    <p>
-                        Your Name<br />
-                        What You Are<br />
-                    </p>
-                </div>
-                <div class="contact">
-                    <p>
-                        <a href="http://github.com/bdurrani/">github.com/bdurrani</a><br />
-                    </p>
-                </div>
             </div>
         </div>
     </div>
