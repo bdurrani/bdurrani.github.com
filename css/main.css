@@ -13,15 +13,15 @@
 html, body { height: 100%; }
 
 body {
-  background-color: #FFF;
+  /*background-color: #FFF;*/
   /*font: 13.34px Helvetica, Arial, sans-serif;*/
   /*font-size: small;*/
   font-family: 'Bitter',serif;
   text-align: center;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-size: 100%; }
+/*h1, h2, h3, h4, h5, h6 {
+  font-size: 100%; }*/
 
 h1 { margin-bottom: 1em; }
 p { margin: 1em 0; }
@@ -46,7 +46,8 @@ ul.posts li {
 
 ul.posts span {
   color: #aaa;
-  font-family: Monaco, "Courier New", monospace;
+  /*font-family: Monaco, "Courier New", monospace;*/
+  font-family: 'Bitter',serif; 
   font-size: 80%;
 }
 
