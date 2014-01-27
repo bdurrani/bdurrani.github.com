@@ -2,6 +2,7 @@
 layout: post
 title:  "The trouble with panels"
 date:   2014-01-25 
+comments: false
 tags: jquerymobile js
 ---
 
@@ -15,7 +16,7 @@ My goal was to make use of their most excellant [panel] widget. I wanted to recr
 in their demo page. I have a bunch of pages on my site that I set up using their [single-page template] as a 
 starting point.
 
-```
+{% highlight html %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -42,7 +43,7 @@ starting point.
 </div><!-- /page --> 
 </body>
 </html>
-```
+{% endhighlight %}
 The next thing I needed to use was an [external panels]. External panels are pretty great if you have a panel
 that needs to show up across multiple pages. You declare it outside the page, but before the body so it lives outside
 the DOM of the page being displayed.
@@ -50,21 +51,20 @@ the DOM of the page being displayed.
 A limitation I ran into was trying to use external panels that have collapsible list items. Turns out, this panel 
 will loose all of its formatting.
 
-```
+{% highlight html %}
 <!DOCTYPE html> 
 <html>
 <head>
     <title>Page Title one</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" />
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" />
 <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script src="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script><script id="panel-init">
         $(function() {
             $( "body>[data-role='panel']" ).panel().enhanceWithin();
         });
     </script>
-</head>
-
+</head> 
 <body>
     <div data-role="page">
 
@@ -103,7 +103,8 @@ will loose all of its formatting.
         </div>
 </body>
 </html>
-```
+{% endhighlight %}
+
 To have it look like a jquery panel, you will need to call `enhanceWithin()` as part of the initialization.
 I found that part via the magic of stackoverflow.
 
