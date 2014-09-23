@@ -1,5 +1,6 @@
 name: bilal durrani
 markdown: redcarpet
 highlighter: rouge
+encoding: "utf-8"
 permalink: /blog/:categories/:year/:month/:day/:title.html
 
