@@ -43,7 +43,8 @@ public IEnumerable<Datum> Data(CancellationToken cancellationToken)
 {% endhighlight %}
 
 The data reader API did not offer a version that export async I/O operations. 
-
+Note: mention the 'Patterns of parallel programming' as a reference.
+Link: https://www.microsoft.com/en-ca/download/details.aspx?id=19222
 
 {% highlight csharp %}
 private void Prefetcher(CancellationToken cancellationToken) 
