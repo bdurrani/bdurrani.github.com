@@ -11,34 +11,44 @@ Sounds simple enough. Here is my first version. I've simplified the custom data 
 the parameters
 
 {% highlight csharp %}
-public IEnumerable<Datum> Data(CancellationToken cancellationToken) 
-{ 
-	// lets read the data in chunks of 8kb points
-	// chosen based on L1 cache size
-	const long BlockSize = 1<<13;
 
-	using (var session = CustomFileReader.OpenFile(fileName)) 
+      public class Datum
+        {
+            public double A { get; private set; }
+            public double B { get; private set; }
+
+            public Datum(double a, double b)
+            {
+                A = a;
+                B = b;
+            }
+        }
+        
+	public IEnumerable<Datum> Data() 
 	{ 
-		string groupName = "data group";
-		string channelOne= ..., channelTwo = ...;	// some channel names
-		// get the total number of points for the group
-		var totalCount = (long) CustomFile.GetGroupCount(session, groupName); 
-
-		long currentCount = 0L;
-		while (currentCount < totalCount)
-		{
-			var channelOneData = CustomFile.ReadData(session, groupName, 
-					channelOne,	// channel name 
-					currentCount,	// offset to start reading from 
-					BufferSize)	// number of data points to return from the channel
-				as int[]; 
-			foreach (var item in datum) 
-			{ 
-				yield return item; 
-			} 
-		}
-	} 
-}
+		// lets read the data in chunks of 8kb points
+		// chosen based on L1 cache size
+		const long BlockSize = 1<<13;
+	
+		 using (BinaryReader reader = new BinaryReader(File.Open(fileName, FileMode.Open)))
+	        {
+	            var datumSize = 2 * sizeof(double);
+	            // number of Datums to read in a block
+	            var blockSize = 1 << 13;
+	
+	            byte[] data = reader.ReadBytes(blockSize);
+	            while (data.Length > 0)
+	            {
+	                for (long i = 0; i < data.Length; i += datumSize)
+	                {
+	                    double a = BitConverter.ToDouble(data, 0);
+	                    double b = BitConverter.ToDouble(data, sizeof(double));
+	                    yield return new Datum(a, b); 
+	                }
+	                data = reader.ReadBytes(blockSize);
+	            }
+	        }
+	}
 
 {% endhighlight %}
 
