@@ -12,49 +12,48 @@ the parameters
 
 {% highlight csharp %}
 
-      public class Datum
-        {
-            public double A { get; private set; }
-            public double B { get; private set; }
+public class Datum
+{
+    public double A { get; private set; }
+    public double B { get; private set; }
 
-            public Datum(double a, double b)
-            {
-                A = a;
-                B = b;
-            }
-        }
+    public Datum(double a, double b)
+    {
+        A = a;
+        B = b;
+    }
+}
         
-	public IEnumerable<Datum> Data() 
-	{ 
-		// lets read the data in chunks of 8kb points
-		// chosen based on L1 cache size
-		const long BlockSize = 1<<13;
-	
-		 using (BinaryReader reader = new BinaryReader(File.Open(fileName, FileMode.Open)))
-	        {
-	            var datumSize = 2 * sizeof(double);
-	            // number of Datums to read in a block
-	            var blockSize = 1 << 13;
-	
-	            byte[] data = reader.ReadBytes(blockSize);
-	            while (data.Length > 0)
-	            {
-	                for (long i = 0; i < data.Length; i += datumSize)
-	                {
-	                    double a = BitConverter.ToDouble(data, 0);
-	                    double b = BitConverter.ToDouble(data, sizeof(double));
-	                    yield return new Datum(a, b); 
-	                }
-	                data = reader.ReadBytes(blockSize);
-	            }
-	        }
-	}
+public IEnumerable<Datum> Data() 
+{ 
+    // lets read the data in chunks of 8kb points
+    // chosen based on L1 cache size
+    const long BlockSize = 1<<13;
+
+    using (BinaryReader reader = new BinaryReader(File.Open(fileName, FileMode.Open)))
+    {
+        var datumSize = 2 * sizeof(double);
+        // number of Datums to read in a block
+        var blockSize = 1 << 13;
+
+        byte[] data = reader.ReadBytes(blockSize);
+        while (data.Length > 0)
+        {
+            for (long i = 0; i < data.Length; i += datumSize)
+            {
+                double a = BitConverter.ToDouble(data, 0);
+                double b = BitConverter.ToDouble(data, sizeof(double));
+                yield return new Datum(a, b); 
+            }
+            data = reader.ReadBytes(blockSize);
+        }
+    }
+}
 
 {% endhighlight %}
 
 The data reader API did not offer a version that export async I/O operations. 
-Note: mention the 'Patterns of parallel programming' as a reference.
-Link: https://www.microsoft.com/en-ca/download/details.aspx?id=19222
+Note: mention the [Patterns of parallel programming][1] as a reference.
 
 {% highlight csharp %}
 private void Prefetcher(CancellationToken cancellationToken) 
@@ -108,3 +107,4 @@ private void Prefetcher(CancellationToken cancellationToken)
     } 
 }
 {% endhighlight %}
+[1]: https://www.microsoft.com/en-ca/download/details.aspx?id=19222
