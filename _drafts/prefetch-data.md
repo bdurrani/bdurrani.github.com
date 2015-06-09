@@ -5,10 +5,11 @@ title: Prefetch data from disk
 
 The task was simple. I have data on disk where the sizes varied from 1kb to a couple of gigs. Read the data points and return the points 
 from a method that returns an IEnumerable<DataPoint>. The specific data file has a custom format, so I had to use a custom API to read
-the data. 
+the data. There was no async I/O option available unfortunately.
 
-Sounds simple enough. Here is my first version. I've simplified the custom data API and added comments to explain
-the parameters
+Sounds simple enough. Here is my first version. 
+I replaced the custom API with a simple file read operation. As with the custom API, I read pairs of data in 
+blocks I can specify.
 
 {% highlight csharp %}
 
@@ -23,19 +24,21 @@ public class Datum
         B = b;
     }
 }
-        
+
 public IEnumerable<Datum> Data() 
 { 
     // lets read the data in chunks of 8kb points
     // chosen based on L1 cache size
     const long BlockSize = 1<<13;
 
-    using (BinaryReader reader = new BinaryReader(File.Open(fileName, FileMode.Open)))
+    using (BinaryReader reader = new BinaryReader(
+                        File.Open(fileName, FileMode.Open)))
     {
         var datumSize = 2 * sizeof(double);
         // number of Datums to read in a block
         var blockSize = 1 << 13;
 
+        // read a block of data and return
         byte[] data = reader.ReadBytes(blockSize);
         while (data.Length > 0)
         {
@@ -52,7 +55,20 @@ public IEnumerable<Datum> Data()
 
 {% endhighlight %}
 
-The data reader API did not offer a version that export async I/O operations. 
+This works ofcourse. 
+I read the data in blocks, create the Datum as required, and return the data. 
+
+The client can use foreach and lazily process the Datums as needed.
+
+{% highlight csharp %}
+foreach (var item in Data(CancellationToken.None))
+{
+    // process the datums
+} 
+{% endhighlight %} 
+
+Can we do better?
+
 Note: mention the [Patterns of parallel programming][1] as a reference.
 
 {% highlight csharp %}
@@ -60,50 +76,50 @@ private void Prefetcher(CancellationToken cancellationToken)
 { 
     try 
     { 
-	using (var session = CustomFileReader.OpenFile(fileName)) 
-	{ 
-	    var groupName = Id.ToString(CultureInfo.InvariantCulture); 
-	    var totalCount = (long) TdmsDatasetHelper.GetGroupCount(_tdmsProvider, session, groupName); 
-	    long currentCount = 0; 
-	    while (currentCount < totalCount) 
-	    { 
-		if (cancellationToken.IsCancellationRequested) 
-		{ 
-		    return; 
-		} 
-		bool eof; 
-		var valueData = 
-		    _tdmsProvider.ReadData(session, groupName, TdmsDatasetHelper.ValueChannelName, 
-			PFTypes.DoubleArray1D, 
-			currentCount, BufferSize, out eof) as 
-			double[]; 
-		var overflowData = 
-		    _tdmsProvider.ReadData(session, groupName, TdmsDatasetHelper.OverflowChannelName, 
-			PFTypes.Int32Array1D, currentCount, BufferSize, out eof) as int[]; 
-		if (valueData == null || overflowData == null) 
-		{ 
-		    return; 
-		} 
-		var datums = valueData.Zip(overflowData).Select(v => Datum.Create(v.Key, v.Value)).ToArray(); 
-		// check for cancellation before doing anything with the collection. 
-		if (cancellationToken.IsCancellationRequested) 
-		{ 
-		    return; 
-		} 
-		// this will throw on cancellation 
-		_prefetchDatumCollection.Add(datums, cancellationToken); 
-		currentCount += valueData.Length; 
-	    } 
-	} 
+        using (var session = CustomFileReader.OpenFile(fileName)) 
+        { 
+            var groupName = Id.ToString(CultureInfo.InvariantCulture); 
+            var totalCount = (long) TdmsDatasetHelper.GetGroupCount(_tdmsProvider, session, groupName); 
+            long currentCount = 0; 
+            while (currentCount < totalCount) 
+            { 
+                if (cancellationToken.IsCancellationRequested) 
+                { 
+                    return; 
+                } 
+                bool eof; 
+                var valueData = 
+                    _tdmsProvider.ReadData(session, groupName, TdmsDatasetHelper.ValueChannelName, 
+                            PFTypes.DoubleArray1D, 
+                            currentCount, BufferSize, out eof) as 
+                    double[]; 
+                var overflowData = 
+                    _tdmsProvider.ReadData(session, groupName, TdmsDatasetHelper.OverflowChannelName, 
+                            PFTypes.Int32Array1D, currentCount, BufferSize, out eof) as int[]; 
+                if (valueData == null || overflowData == null) 
+                { 
+                    return; 
+                } 
+                var datums = valueData.Zip(overflowData).Select(v => Datum.Create(v.Key, v.Value)).ToArray(); 
+                // check for cancellation before doing anything with the collection. 
+                if (cancellationToken.IsCancellationRequested) 
+                { 
+                    return; 
+                } 
+                // this will throw on cancellation 
+                _prefetchDatumCollection.Add(datums, cancellationToken); 
+                currentCount += valueData.Length; 
+            } 
+        } 
     } 
     catch (OperationCanceledException) 
     { 
-       // don't let it bubble up. I don't want Task.Wait() to throw.  
-       // Just end the task normally to let the prefetch collection clean up happen correctly 
+        // don't let it bubble up. I don't want Task.Wait() to throw.  
+        // Just end the task normally to let the prefetch collection clean up happen correctly 
     } 
     finally 
     { 
-	_prefetchDatumCollection.CompleteAdding();  
+        _prefetchDatumCollection.CompleteAdding();  
     } 
 }
 {% endhighlight %}
