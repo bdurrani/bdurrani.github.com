@@ -78,38 +78,7 @@ private void Prefetcher(CancellationToken cancellationToken)
     { 
         using (var session = CustomFileReader.OpenFile(fileName)) 
         { 
-            var groupName = Id.ToString(CultureInfo.InvariantCulture); 
-            var totalCount = (long) TdmsDatasetHelper.GetGroupCount(_tdmsProvider, session, groupName); 
-            long currentCount = 0; 
-            while (currentCount < totalCount) 
-            { 
-                if (cancellationToken.IsCancellationRequested) 
-                { 
-                    return; 
-                } 
-                bool eof; 
-                var valueData = 
-                    _tdmsProvider.ReadData(session, groupName, TdmsDatasetHelper.ValueChannelName, 
-                            PFTypes.DoubleArray1D, 
-                            currentCount, BufferSize, out eof) as 
-                    double[]; 
-                var overflowData = 
-                    _tdmsProvider.ReadData(session, groupName, TdmsDatasetHelper.OverflowChannelName, 
-                            PFTypes.Int32Array1D, currentCount, BufferSize, out eof) as int[]; 
-                if (valueData == null || overflowData == null) 
-                { 
-                    return; 
-                } 
-                var datums = valueData.Zip(overflowData).Select(v => Datum.Create(v.Key, v.Value)).ToArray(); 
-                // check for cancellation before doing anything with the collection. 
-                if (cancellationToken.IsCancellationRequested) 
-                { 
-                    return; 
-                } 
-                // this will throw on cancellation 
-                _prefetchDatumCollection.Add(datums, cancellationToken); 
-                currentCount += valueData.Length; 
-            } 
+            
         } 
     } 
     catch (OperationCanceledException) 
@@ -123,4 +92,5 @@ private void Prefetcher(CancellationToken cancellationToken)
     } 
 }
 {% endhighlight %}
+
 [1]: https://www.microsoft.com/en-ca/download/details.aspx?id=19222
