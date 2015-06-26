@@ -58,69 +58,100 @@ public IEnumerable<Datum> Data()
 This works ofcourse. 
 I read the data in blocks, create the Datum as required, and return the data. 
 
-The client can use foreach and lazily process the Datums as needed.
+The client can use `foreach` and lazily process the Datums as needed.
 
 {% highlight csharp %}
 foreach (var item in Data(CancellationToken.None))
 {
-    // process the datums
+    // process the datums...
 } 
 {% endhighlight %} 
 
 Can we do better?
+What if while the client is enumerating over the Datums and processing that, we read the nextblock
+of data and have it ready to go. We don't need to wait for the client to finish their processing, before
+we can read the next block.
 
-Note: mention the [Patterns of parallel programming][1] as a reference.
+Let's see how that would work.
+First we would need to kick off a background thread dedicated to grabbing chunks of data from disk.
+We can prefetch a certain amount of data and have it ready to go for when the client requests it. 
+
+The prefetcher could look something like the following:
 
 {% highlight csharp %}
+
 private void Prefetcher(CancellationToken cancellationToken) 
-{ 
-    try 
-    { 
-        using (var session = CustomFileReader.OpenFile(fileName)) 
-        { 
-            var groupName = Id.ToString(CultureInfo.InvariantCulture); 
-            var totalCount = (long) TdmsDatasetHelper.GetGroupCount(_tdmsProvider, session, groupName); 
-            long currentCount = 0; 
-            while (currentCount < totalCount) 
-            { 
-                if (cancellationToken.IsCancellationRequested) 
-                { 
-                    return; 
-                } 
-                bool eof; 
-                var valueData = 
-                    _tdmsProvider.ReadData(session, groupName, TdmsDatasetHelper.ValueChannelName, 
-                            PFTypes.DoubleArray1D, 
-                            currentCount, BufferSize, out eof) as 
-                    double[]; 
-                var overflowData = 
-                    _tdmsProvider.ReadData(session, groupName, TdmsDatasetHelper.OverflowChannelName, 
-                            PFTypes.Int32Array1D, currentCount, BufferSize, out eof) as int[]; 
-                if (valueData == null || overflowData == null) 
-                { 
-                    return; 
-                } 
-                var datums = valueData.Zip(overflowData).Select(v => Datum.Create(v.Key, v.Value)).ToArray(); 
-                // check for cancellation before doing anything with the collection. 
-                if (cancellationToken.IsCancellationRequested) 
-                { 
-                    return; 
-                } 
+{
+    using (BinaryReader reader = new BinaryReader(
+                File.Open(fileName, FileMode.Open))) 
+    {
+        try
+        {
+            var datumSize = 2 * sizeof(double);
+            // number of Datums to read in a block
+            var blockSize = 1 << 13;
+
+            // read a block of data and return
+            byte[] data = reader.ReadBytes(blockSize);
+            while (data.Length > 0)
+            {
+                var datums = new Datum[data.Length/2]; 
+                for (long i = 0; i < data.Length; i += datumSize)
+                {
+                    double a = BitConverter.ToDouble(data, 0);
+                    double b = BitConverter.ToDouble(data, sizeof(double));
+                    datums[i] = new Datum(a, b); 
+                }
                 // this will throw on cancellation 
                 _prefetchDatumCollection.Add(datums, cancellationToken); 
-                currentCount += valueData.Length; 
-            } 
+                data = reader.ReadBytes(blockSize);
+            }
+        }
+        catch (OperationCanceledException) 
+        { 
+            // don't let it bubble up. I don't want Task.Wait() to throw.  
+            // Just end the task normally to let the prefetch collection clean up happen correctly 
+        } 
+        finally 
+        { 
+            _prefetchDatumCollection.CompleteAdding();  
+        } 
+
+    }
+}
+
+public IEnumerable<Datum> Data(CancellationToken cancellationToken) 
+{ 
+    _prefetchDatumCollection = new BlockingCollection<Datum[]>(BlockCount); 
+    // using cancellationToken will prevent the task from starting if the cancel
+    // happens before we get here
+    var readTask = Task.Factory.StartNew(() => { Prefetcher(cancellationToken); }, 
+            cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current); 
+
+    // not using cancellation token here to prevent GetConsumingEnumerable() from throwing 
+    // on cancel. Let it exit normally. It will stop normally once its read everything  
+    // that was already there in the collection. The collection will mark itself as  
+    // complete once the task returns.
+    foreach (var datum in _prefetchDatumCollection.GetConsumingEnumerable()) 
+    { 
+        foreach (var item in datum) 
+        { 
+            yield return item; 
         } 
     } 
-    catch (OperationCanceledException) 
+    try 
     { 
-        // don't let it bubble up. I don't want Task.Wait() to throw.  
-        // Just end the task normally to let the prefetch collection clean up happen correctly 
+        // no cancellation token here. Let the task end normally. If anything else bad happens, 
+        // the collection will still get cleaned up. 
+        readTask.Wait(); 
     } 
     finally 
     { 
-        _prefetchDatumCollection.CompleteAdding();  
+        _prefetchDatumCollection.Dispose(); 
     } 
-}
+} 
 {% endhighlight %}
+
+Note: mention the [Patterns of parallel programming][1] as a reference.
+
 [1]: https://www.microsoft.com/en-ca/download/details.aspx?id=19222
