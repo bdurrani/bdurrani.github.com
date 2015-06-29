@@ -103,6 +103,7 @@ private void Prefetcher(CancellationToken cancellationToken)
                     datums[i] = new Datum(a, b); 
                 }
                 // this will throw on cancellation 
+                // Add will block once the capacity of the blocking collection is reached
                 _prefetchDatumCollection.Add(datums, cancellationToken); 
                 data = reader.ReadBytes(blockSize);
             }
@@ -116,7 +117,6 @@ private void Prefetcher(CancellationToken cancellationToken)
         { 
             _prefetchDatumCollection.CompleteAdding();  
         } 
-
     }
 }
 
@@ -125,7 +125,7 @@ public IEnumerable<Datum> Data(CancellationToken cancellationToken)
     _prefetchDatumCollection = new BlockingCollection<Datum[]>(BlockCount); 
     // using cancellationToken will prevent the task from starting if the cancel
     // happens before we get here
-    var readTask = Task.Factory.StartNew(() => { Prefetcher(cancellationToken); }, 
+    var readTask = Task.Factory.StartNew(() => Prefetcher(cancellationToken) , 
             cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current); 
 
     // not using cancellation token here to prevent GetConsumingEnumerable() from throwing 
@@ -152,6 +152,7 @@ public IEnumerable<Datum> Data(CancellationToken cancellationToken)
 } 
 {% endhighlight %}
 
-Note: mention the [Patterns of parallel programming][1] as a reference.
+A great reference for parallel programming is the [Patterns of parallel programming][1]. It's a great
+starting point for familiarizing yourself with the various parallel program libraries available in .NET
 
 [1]: https://www.microsoft.com/en-ca/download/details.aspx?id=19222
