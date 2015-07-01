@@ -3,16 +3,19 @@ layout: post
 title: Prefetch data from disk
 ---
 
-The task was simple. I have data on disk where the sizes varied from 1kb to a couple of gigs. Read the data points and return the points 
-from a method that returns an IEnumerable<DataPoint>. The specific data file has a custom format, so I had to use a custom API to read
+The task was simple. I have data on disk where the file sizes varied from 1kb to a couple of gigs. I needed to process the data 
+and return the points from a method that returns an IEnumerable<DataPoint>. The specific data file has a custom format, so I had to use a custom API to read
 the data. There was no async I/O option available unfortunately.
 
 Sounds simple enough. Here is my first version. 
 I replaced the custom API with a simple file read operation. As with the custom API, I read pairs of data in 
-blocks I can specify.
+block sizes I can specify.
 
 {% highlight csharp %}
 
+///<summary>
+/// Contains a data point
+///</summary>
 public class Datum
 {
     public double A { get; private set; }
@@ -68,8 +71,8 @@ foreach (var item in Data(CancellationToken.None))
 {% endhighlight %} 
 
 Can we do better?
-What if while the client is enumerating over the Datums and processing that, we read the nextblock
-of data and have it ready to go. We don't need to wait for the client to finish their processing, before
+What if while the client is enumerating over the Datums and processing that, we read the next block
+of data and have it ready to go. We don't need to wait for the client to finish their processing before
 we can read the next block.
 
 Let's see how that would work.
@@ -152,7 +155,10 @@ public IEnumerable<Datum> Data(CancellationToken cancellationToken)
 } 
 {% endhighlight %}
 
+That's one way to do it. One optimization would be to avoid using a 'Task' when dealing with small files.
+The overhead is not worth it in that scenario. 
+
 A great reference for parallel programming is the [Patterns of parallel programming][1]. It's a great
-starting point for familiarizing yourself with the various parallel program libraries available in .NET
+starting point for familiarizing yourself with the various parallel program libraries available in the .NET Framework
 
 [1]: https://www.microsoft.com/en-ca/download/details.aspx?id=19222
