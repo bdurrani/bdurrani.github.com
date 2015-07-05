@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Prefetch data from disk
+comments: true
 ---
 
 The task was simple. I have data on disk where the file sizes varied from 1kb to a couple of gigs. I needed to process the data 
