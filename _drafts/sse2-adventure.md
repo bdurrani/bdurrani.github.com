@@ -131,7 +131,8 @@ Small, compact and to the point, which is what you would expect from a optimizin
 This is the result of whole program optimization. 
 
 If I did want to generate some assembly code for use via C#, I would have to use a modified version of
-the non-optimized code for it.
+the non-optimized code for it to avoid making use of hard-coded memory references for storing data
+and instead, loading up data from registers.
 
 Maybe I should look at something similar to my original problem, which
 is manipulating arrays of data.
@@ -139,15 +140,64 @@ is manipulating arrays of data.
 How about something like this
 
 {% highlight c %}
-_declspec(noinline) double Sum(double* input, size_t size)
+_declspec(noinline) double SumOfSquares(int* input, size_t size)
 {
     double temp = 0;
     for (int i = 0; i < size; i++)
     {
-        temp += input[i];
+        temp += (input[i] * input[i]);
     }
     return temp;
 }
 {% endhighlight %}
 
+{% highlight c %}
+ _declspec(noinline) double SumOfSquares(int* input, size_t size)
+    14: {
+000000013FEB3410 48 89 54 24 10       mov         qword ptr [temp],rdx  // saving registers on the
+000000013FEB3415 48 89 4C 24 08       mov         qword ptr [rsp+8],rcx // stack for debugging easy
+000000013FEB341A 57                   push        rdi                   // see [this document][2]
+000000013FEB341B 48 83 EC 20          sub         rsp,20h               // space for local variables 
+000000013FEB341F 48 8B FC             mov         rdi,rsp  
+000000013FEB3422 B9 08 00 00 00       mov         ecx,8  
+000000013FEB3427 B8 CC CC CC CC       mov         eax,0CCCCCCCCh  
+000000013FEB342C F3 AB                rep stos    dword ptr [rdi]  
+000000013FEB342E 48 8B 4C 24 30       mov         rcx,qword ptr [input]  
+    15:     double temp = 0;
+000000013FEB3433 0F 57 C0             xorps       xmm0,xmm0  
+    15:     double temp = 0;
+000000013FEB3436 F2 0F 11 44 24 10    movsd       mmword ptr [temp],xmm0  
+    16:     for (int i = 0; i < size; i++)
+000000013FEB343C C7 44 24 18 00 00 00 00 mov         dword ptr [rsp+18h],0  
+000000013FEB3444 EB 0A                jmp         SumOfSquares+40h (013FEB3450h)  
+000000013FEB3446 8B 44 24 18          mov         eax,dword ptr [rsp+18h]  
+000000013FEB344A FF C0                inc         eax  
+000000013FEB344C 89 44 24 18          mov         dword ptr [rsp+18h],eax  
+000000013FEB3450 48 63 44 24 18       movsxd      rax,dword ptr [rsp+18h]  
+000000013FEB3455 48 3B 44 24 38       cmp         rax,qword ptr [size]  
+000000013FEB345A 73 35                jae         SumOfSquares+81h (013FEB3491h)  
+    17:     {
+    18:         temp += (input[i] * input[i]);
+000000013FEB345C 48 63 44 24 18       movsxd      rax,dword ptr [rsp+18h]  
+000000013FEB3461 48 63 4C 24 18       movsxd      rcx,dword ptr [rsp+18h]  
+000000013FEB3466 48 8B 54 24 30       mov         rdx,qword ptr [input]  
+000000013FEB346B 4C 8B 44 24 30       mov         r8,qword ptr [input]  
+000000013FEB3470 8B 04 82             mov         eax,dword ptr [rdx+rax*4]  
+000000013FEB3473 41 0F AF 04 88       imul        eax,dword ptr [r8+rcx*4]  
+000000013FEB3478 F2 0F 2A C0          cvtsi2sd    xmm0,eax  
+000000013FEB347C F2 0F 10 4C 24 10    movsd       xmm1,mmword ptr [temp]  
+000000013FEB3482 F2 0F 58 C8          addsd       xmm1,xmm0  
+000000013FEB3486 0F 28 C1             movaps      xmm0,xmm1  
+000000013FEB3489 F2 0F 11 44 24 10    movsd       mmword ptr [temp],xmm0  
+    19:     }
+000000013FEB348F EB B5                jmp         SumOfSquares+36h (013FEB3446h)  
+    20:     return temp;
+000000013FEB3491 F2 0F 10 44 24 10    movsd       xmm0,mmword ptr [temp]  
+    21: }
+000000013FEB3497 48 83 C4 20          add         rsp,20h  
+000000013FEB349B 5F                   pop         rdi  
+000000013FEB349C C3                   ret 
+{% endhighlight %}
+
 [1]:https://msdn.microsoft.com/en-us/library/7kcdt6fy.aspx 
+[2]:http://blogs.msdn.com/b/ntdebugging/archive/2009/01/09/challenges-of-debugging-optimized-x64-code.aspx
