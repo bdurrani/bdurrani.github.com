@@ -154,50 +154,145 @@ _declspec(noinline) double SumOfSquares(int* input, size_t size)
 {% highlight c %}
  _declspec(noinline) double SumOfSquares(int* input, size_t size)
     14: {
-000000013FEB3410 48 89 54 24 10       mov         qword ptr [temp],rdx  // saving registers on the
-000000013FEB3415 48 89 4C 24 08       mov         qword ptr [rsp+8],rcx // stack for debugging easy
-000000013FEB341A 57                   push        rdi                   // see [this document][2]
-000000013FEB341B 48 83 EC 20          sub         rsp,20h               // space for local variables 
-000000013FEB341F 48 8B FC             mov         rdi,rsp  
-000000013FEB3422 B9 08 00 00 00       mov         ecx,8  
-000000013FEB3427 B8 CC CC CC CC       mov         eax,0CCCCCCCCh  
-000000013FEB342C F3 AB                rep stos    dword ptr [rdi]  
-000000013FEB342E 48 8B 4C 24 30       mov         rcx,qword ptr [input]  
+000000013FEB3410 48 89 54 24 10       mov         qword ptr [temp],rdx      // saving registers on the
+000000013FEB3415 48 89 4C 24 08       mov         qword ptr [rsp+8],rcx     // stack for debugging easy
+000000013FEB341A 57                   push        rdi                       // see [this article][2]
+000000013FEB341B 48 83 EC 20          sub         rsp,20h                   // space for local variables 
+000000013F22341F 48 8B FC             mov         rdi,rsp  
+000000013F223422 B9 08 00 00 00       mov         ecx,8  
+000000013F223427 B8 CC CC CC CC       mov         eax,0CCCCCCCCh  
+000000013F22342C F3 AB                rep stos    dword ptr [rdi]           // clear the new stack home space 
+000000013F22342E 48 8B 4C 24 30       mov         rcx,qword ptr [rsp+30h]   // input
     15:     double temp = 0;
-000000013FEB3433 0F 57 C0             xorps       xmm0,xmm0  
-    15:     double temp = 0;
-000000013FEB3436 F2 0F 11 44 24 10    movsd       mmword ptr [temp],xmm0  
+000000013F223433 0F 57 C0             xorps       xmm0,xmm0                 // clear 
+000000013F223436 F2 0F 11 44 24 10    movsd       mmword ptr [rsp+10h],xmm0 // temp = 0 
     16:     for (int i = 0; i < size; i++)
-000000013FEB343C C7 44 24 18 00 00 00 00 mov         dword ptr [rsp+18h],0  
-000000013FEB3444 EB 0A                jmp         SumOfSquares+40h (013FEB3450h)  
-000000013FEB3446 8B 44 24 18          mov         eax,dword ptr [rsp+18h]  
-000000013FEB344A FF C0                inc         eax  
-000000013FEB344C 89 44 24 18          mov         dword ptr [rsp+18h],eax  
-000000013FEB3450 48 63 44 24 18       movsxd      rax,dword ptr [rsp+18h]  
-000000013FEB3455 48 3B 44 24 38       cmp         rax,qword ptr [size]  
-000000013FEB345A 73 35                jae         SumOfSquares+81h (013FEB3491h)  
+000000013F22343C C7 44 24 18 00 00 00 00 mov         dword ptr [rsp+18h],0  // i= 0
+000000013F223444 EB 0A                jmp         000000013F223450  
+000000013F223446 8B 44 24 18          mov         eax,dword ptr [rsp+18h]  
+000000013F22344A FF C0                inc         eax  
+000000013F22344C 89 44 24 18          mov         dword ptr [rsp+18h],eax  
+000000013F223450 48 63 44 24 18       movsxd      rax,dword ptr [rsp+18h]   // rax = i 
+000000013F223455 48 3B 44 24 38       cmp         rax,qword ptr [rsp+38h]   // cmp i with size 
+000000013F22345A 73 35                jae         000000013F223491          // jmp if i >= size 
     17:     {
     18:         temp += (input[i] * input[i]);
-000000013FEB345C 48 63 44 24 18       movsxd      rax,dword ptr [rsp+18h]  
-000000013FEB3461 48 63 4C 24 18       movsxd      rcx,dword ptr [rsp+18h]  
-000000013FEB3466 48 8B 54 24 30       mov         rdx,qword ptr [input]  
-000000013FEB346B 4C 8B 44 24 30       mov         r8,qword ptr [input]  
-000000013FEB3470 8B 04 82             mov         eax,dword ptr [rdx+rax*4]  
-000000013FEB3473 41 0F AF 04 88       imul        eax,dword ptr [r8+rcx*4]  
-000000013FEB3478 F2 0F 2A C0          cvtsi2sd    xmm0,eax  
-000000013FEB347C F2 0F 10 4C 24 10    movsd       xmm1,mmword ptr [temp]  
-000000013FEB3482 F2 0F 58 C8          addsd       xmm1,xmm0  
-000000013FEB3486 0F 28 C1             movaps      xmm0,xmm1  
-000000013FEB3489 F2 0F 11 44 24 10    movsd       mmword ptr [temp],xmm0  
+000000013F22345C 48 63 44 24 18       movsxd      rax,dword ptr [rsp+18h]   // rax = i 
+000000013F223461 48 63 4C 24 18       movsxd      rcx,dword ptr [rsp+18h]   // rcx = i 
+000000013F223466 48 8B 54 24 30       mov         rdx,qword ptr [rsp+30h]   // rdx = input 
+000000013F22346B 4C 8B 44 24 30       mov         r8,qword ptr [rsp+30h]    // r8 = input 
+000000013F223470 8B 04 82             mov         eax,dword ptr [rdx+rax*4] // input[i] 
+000000013F223473 41 0F AF 04 88       imul        eax,dword ptr [r8+rcx*4]  // res =input[i] * input[i] 
+000000013F223478 F2 0F 2A C0          cvtsi2sd    xmm0,eax                  // xmm0 = (double)res 
+000000013F22347C F2 0F 10 4C 24 10    movsd       xmm1,mmword ptr [rsp+10h] // xmm1 = temp 
+000000013F223482 F2 0F 58 C8          addsd       xmm1,xmm0                 // xmm += res 
+000000013F223486 0F 28 C1             movaps      xmm0,xmm1  
+000000013F223489 F2 0F 11 44 24 10    movsd       mmword ptr [rsp+10h],xmm0 // save res to temp
     19:     }
-000000013FEB348F EB B5                jmp         SumOfSquares+36h (013FEB3446h)  
+000000013F22348F EB B5                jmp         000000013F223446          // repeat the loop 
     20:     return temp;
-000000013FEB3491 F2 0F 10 44 24 10    movsd       xmm0,mmword ptr [temp]  
+000000013F223491 F2 0F 10 44 24 10    movsd       xmm0,mmword ptr [rsp+10h] // mov temp to return value 
     21: }
-000000013FEB3497 48 83 C4 20          add         rsp,20h  
-000000013FEB349B 5F                   pop         rdi  
-000000013FEB349C C3                   ret 
+000000013F223497 48 83 C4 20          add         rsp,20h  
+000000013F22349B 5F                   pop         rdi  
+000000013F22349C C3                   ret  
 {% endhighlight %}
+
+There are several things in this code that would make our lives easier if we ever had to debug this code.
+For example, copies of the function parameters are saved in the stack.
+[Guard bytes][3] (0xCCCCCCCC) are used when initializing the extra stack space for temporary variables on the stack.
+
+Now you can see what the assembly looks like for a simple little function like this.
+
+Let's repeat the process now, but for the release version. 
+I had to make some changes in the function to prevent it from being inlined.
+The release version is build with /Ox (Full optimization) turned on. 
+And since the purpose of this exercise is to speed things up, I want to make sure my loop gets vectorized. 
+So I turned on the [vectorization report][4] to verify this, and also used switched the floating model to [fast][5]
+
+I get the following
+
+{% highlight c %}
+_declspec(noinline) double SumOfSquares(int* input, size_t size)
+    14: {
+000000013F881000 48 89 5C 24 08       mov         qword ptr [rsp+8],rbx    // save size
+000000013F881005 57                   push        rdi                      // volatile register 
+000000013F881006 48 83 EC 20          sub         rsp,20h                  // make space for temp vars 
+000000013F88100A 48 8B DA             mov         rbx,rdx  
+000000013F88100D 48 8B F9             mov         rdi,rcx  
+    15:     // add a rand() call here to prevent inline
+    16:     double temp = rand();
+000000013F881010 FF 15 0A 11 00 00    call        qword ptr [3F882120h]  
+    17:     temp = 0;
+    18:     for (int i = 0; i < size; i++)
+000000013F881016 33 D2                xor         edx,edx               // clear the result of rand()
+000000013F881018 0F 57 D2             xorps       xmm2,xmm2             // clear 
+000000013F88101B 44 8B C2             mov         r8d,edx  
+000000013F88101E 48 83 FB 04          cmp         rbx,4                     // cmp size and 4 
+000000013F881022 72 62                jb          000000013F881086          // jmp if size < 4 
+000000013F881024 83 3D F1 1F 00 00 02 cmp         dword ptr [3F88301Ch],2   // checks to see if SSE4.2 is supported 
+000000013F88102B 7C 59                jl          000000013F881086          // jmp if not supported 
+000000013F88102D 48 8B C3             mov         rax,rbx  
+000000013F881030 48 8B CB             mov         rcx,rbx  
+000000013F881033 0F 28 CA             movaps      xmm1,xmm2  
+000000013F881036 83 E0 03             and         eax,3  
+000000013F881039 44 8D 4A 02          lea         r9d,[rdx+2]  
+000000013F88103D 48 2B C8             sub         rcx,rax  
+    19:     {
+    20:         temp += (input[i] * input[i]);
+000000013F881040 F3 0F 7E 04 97       movq        xmm0,mmword ptr [rdi+rdx*4]  
+000000013F881045 49 63 C1             movsxd      rax,r9d  
+000000013F881048 41 83 C0 04          add         r8d,4  
+000000013F88104C 49 63 D0             movsxd      rdx,r8d  
+000000013F88104F 41 83 C1 04          add         r9d,4  
+000000013F881053 66 0F 38 40 C0       pmulld      xmm0,xmm0  
+000000013F881058 F3 0F E6 C0          cvtdq2pd    xmm0,xmm0  
+000000013F88105C 66 0F 58 D0          addpd       xmm2,xmm0  
+000000013F881060 F3 0F 7E 04 87       movq        xmm0,mmword ptr [rdi+rax*4]  
+000000013F881065 66 0F 38 40 C0       pmulld      xmm0,xmm0  
+000000013F88106A F3 0F E6 C0          cvtdq2pd    xmm0,xmm0  
+000000013F88106E 66 0F 58 C8          addpd       xmm1,xmm0  
+000000013F881072 48 3B D1             cmp         rdx,rcx  
+000000013F881075 72 C9                jb          000000013F881040  
+    17:     temp = 0;
+    18:     for (int i = 0; i < size; i++)
+000000013F881077 66 0F 58 D1          addpd       xmm2,xmm1  
+000000013F88107B 0F 28 C2             movaps      xmm0,xmm2  
+000000013F88107E 66 0F 15 C2          unpckhpd    xmm0,xmm2  
+000000013F881082 F2 0F 58 D0          addsd       xmm2,xmm0  
+000000013F881086 49 63 C0             movsxd      rax,r8d  
+000000013F881089 48 3B C3             cmp         rax,rbx  
+000000013F88108C 73 32                jae         000000013F8810C0  
+000000013F88108E 48 8D 0C 87          lea         rcx,[rdi+rax*4]  
+000000013F881092 0F 1F 40 00          nop         dword ptr [rax]  
+    17:     temp = 0;
+    18:     for (int i = 0; i < size; i++)
+000000013F881096 66 66 0F 1F 84 00 00 00 00 00 nop         word ptr [rax+rax+00000000h]  
+000000013F8810A0 8B 01                mov         eax,dword ptr [rcx]  
+000000013F8810A2 41 FF C0             inc         r8d  
+000000013F8810A5 48 83 C1 04          add         rcx,4  
+    19:     {
+    20:         temp += (input[i] * input[i]);
+000000013F8810A9 0F AF C0             imul        eax,eax  
+000000013F8810AC 66 0F 6E C8          movd        xmm1,eax  
+000000013F8810B0 49 63 C0             movsxd      rax,r8d  
+000000013F8810B3 F3 0F E6 C9          cvtdq2pd    xmm1,xmm1  
+000000013F8810B7 F2 0F 58 D1          addsd       xmm2,xmm1  
+000000013F8810BB 48 3B C3             cmp         rax,rbx  
+000000013F8810BE 72 E0                jb          000000013F8810A0  
+    21:     }
+    22:     return temp;
+000000013F8810C0 0F 28 C2             movaps      xmm0,xmm2  
+    23: }
+000000013F8810C3 48 8B 5C 24 30       mov         rbx,qword ptr [rsp+30h]  
+000000013F8810C8 48 83 C4 20          add         rsp,20h  
+000000013F8810CC 5F                   pop         rdi  
+000000013F8810CD C3                   ret  
+{% endhighlight %}
+
 
 [1]:https://msdn.microsoft.com/en-us/library/7kcdt6fy.aspx 
 [2]:http://blogs.msdn.com/b/ntdebugging/archive/2009/01/09/challenges-of-debugging-optimized-x64-code.aspx
+[3]:https://en.wikipedia.org/wiki/Magic_number_(programming)#Magic_debug_values
+[4]:https://msdn.microsoft.com/en-us/library/jj614596.aspx 
+[5]:https://msdn.microsoft.com/en-us/library/e7s85ffb.aspx 
