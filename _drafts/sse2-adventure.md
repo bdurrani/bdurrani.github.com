@@ -8,16 +8,16 @@ I started out trying to figure out how sqeeze out optimizations for
 some SNR calculations, which involved the following bit of math.
 
 <div>
-$$norm = \sum_{i=0}^{N} golden_i^2$$
-$$distance = \sum_{i=0}^N (golden_i^2 - variance_i^2)$$
+$$SumOfSquares = \sum_{i=0}^{N} data_i^2$$
 </div>
 
-The language of choice was c#, and this was for a 64-bit process.
+The language of choice was C#, and this was for a 64-bit process.
 
 One idea was to try and use SSE to improve the throughput of the computation. 
 Specifically, SSE2, since all inputs involved 64-bit doubles. 
 SSE is all about 32-bit floats and ints. 
-The Visual Studio compiler (2012 and above) has the ability to auto-vectorize looks
+But the .NET framework currently does not generate SSE instructions.
+The Visual Studio compiler (2012 and above) has the ability to auto-vectorize loops
 using SSE2. What better way to learn how to best use SSE2 than reading the compiler 
 output. With that, I set about reading up on 64-bit assembly code.
 
@@ -230,8 +230,9 @@ _declspec(noinline) double SumOfSquares(int* input, size_t size)
 000000013F88101B 44 8B C2             mov         r8d,edx  
 000000013F88101E 48 83 FB 04          cmp         rbx,4                     // cmp size and 4 
 000000013F881022 72 62                jb          000000013F881086          // jmp if size < 4 
-000000013F881024 83 3D F1 1F 00 00 02 cmp         dword ptr [3F88301Ch],2   // checks to see if SSE4.2 is supported 
-000000013F88102B 7C 59                jl          000000013F881086          // jmp if not supported 
+000000013F881024 83 3D F1 1F 00 00 02 cmp         dword ptr [__isa_available],2   // checks to see [if SSE4.2 is supported][6] 
+000000013F88102B 7C 59                jl          000000013F881086          // jmp if not supported, which is true in
+                                                                            // my case 
 000000013F88102D 48 8B C3             mov         rax,rbx  
 000000013F881030 48 8B CB             mov         rcx,rbx  
 000000013F881033 0F 28 CA             movaps      xmm1,xmm2  
@@ -260,35 +261,258 @@ _declspec(noinline) double SumOfSquares(int* input, size_t size)
 000000013F88107B 0F 28 C2             movaps      xmm0,xmm2  
 000000013F88107E 66 0F 15 C2          unpckhpd    xmm0,xmm2  
 000000013F881082 F2 0F 58 D0          addsd       xmm2,xmm0  
-000000013F881086 49 63 C0             movsxd      rax,r8d  
-000000013F881089 48 3B C3             cmp         rax,rbx  
-000000013F88108C 73 32                jae         000000013F8810C0  
-000000013F88108E 48 8D 0C 87          lea         rcx,[rdi+rax*4]  
-000000013F881092 0F 1F 40 00          nop         dword ptr [rax]  
-    17:     temp = 0;
-    18:     for (int i = 0; i < size; i++)
+000000013F881086 49 63 C0             movsxd      rax,r8d                   // jmp here if SSE4.2
+                                                                            // is not supported 
+                                                                            // r8d = i, rax = i
+000000013F881089 48 3B C3             cmp         rax,rbx                   // compare size and i 
+000000013F88108C 73 32                jae         000000013F8810C0          // jmp if above 
+000000013F88108E 48 8D 0C 87          lea         rcx,[rdi+rax*4]           // rcx = input[rax] 
+000000013F881092 0F 1F 40 00          nop         dword ptr [rax]           // not sure about the 
+    17:     temp = 0;                                                       // purpose of all
+    18:     for (int i = 0; i < size; i++)                                  // these nops
 000000013F881096 66 66 0F 1F 84 00 00 00 00 00 nop         word ptr [rax+rax+00000000h]  
-000000013F8810A0 8B 01                mov         eax,dword ptr [rcx]  
-000000013F8810A2 41 FF C0             inc         r8d  
+000000013F8810A0 8B 01                mov         eax,dword ptr [rcx]       // eax = input[i]
+000000013F8810A2 41 FF C0             inc         r8d                       // i++ 
 000000013F8810A5 48 83 C1 04          add         rcx,4  
     19:     {
     20:         temp += (input[i] * input[i]);
-000000013F8810A9 0F AF C0             imul        eax,eax  
-000000013F8810AC 66 0F 6E C8          movd        xmm1,eax  
-000000013F8810B0 49 63 C0             movsxd      rax,r8d  
-000000013F8810B3 F3 0F E6 C9          cvtdq2pd    xmm1,xmm1  
-000000013F8810B7 F2 0F 58 D1          addsd       xmm2,xmm1  
+000000013F8810A9 0F AF C0             imul        eax,eax                   // signed int multiply
+000000013F8810AC 66 0F 6E C8          movd        xmm1,eax                  // cache result 
+000000013F8810B0 49 63 C0             movsxd      rax,r8d                   // rax = current i 
+000000013F8810B3 F3 0F E6 C9          cvtdq2pd    xmm1,xmm1                 // convert to double 
+000000013F8810B7 F2 0F 58 D1          addsd       xmm2,xmm1                 // save to temp 
 000000013F8810BB 48 3B C3             cmp         rax,rbx  
 000000013F8810BE 72 E0                jb          000000013F8810A0  
     21:     }
     22:     return temp;
-000000013F8810C0 0F 28 C2             movaps      xmm0,xmm2  
+000000013F8810C0 0F 28 C2             movaps      xmm0,xmm2                 // save temp result 
     23: }
-000000013F8810C3 48 8B 5C 24 30       mov         rbx,qword ptr [rsp+30h]  
-000000013F8810C8 48 83 C4 20          add         rsp,20h  
+000000013F8810C3 48 8B 5C 24 30       mov         rbx,qword ptr [rsp+30h]   // rbx = input 
+000000013F8810C8 48 83 C4 20          add         rsp,20h                   // clear up stack 
 000000013F8810CC 5F                   pop         rdi  
 000000013F8810CD C3                   ret  
 {% endhighlight %}
+
+My current CPU does not support SSE4.2 so the code path skips all that goodness.
+If I have made `temp` an `int` instead of a `double`, the compiler would have generated 
+the [SSE2 integer arithmetic][7] instruction set.
+I actually did confirm this, but let's continue with what we have so far
+
+### Generate assembly byte code
+
+So I have the assembly code I need to calculate sum of squares. 
+Let's see what that looks like
+
+{% highlight nasm %}
+# compile using gcc
+.intel_syntax noprefix
+.data
+.text
+.global main
+main:
+# double sum(int* input, size_t size)
+#	rcx = input
+#	rdx = size
+push rdi
+mov rbx, rdx
+mov rdi, rcx
+xor edx, edx
+xorps xmm2, xmm2	
+mov r8d, edx
+movsxd rax, r8d
+lea rcx, [rdi+rax*4]
+@calcbegin:
+mov eax, dword ptr [rcx]
+inc r8d
+add rcx, 4
+imul eax, eax
+movd xmm1, eax
+movsxd rax, r8d
+cvtdq2pd xmm1, xmm1
+addsd xmm2, xmm1
+cmp rax, rbx
+jb @calcbegin
+movaps xmm0, xmm2
+pop rdi
+ret    
+{% endhighlight %}
+
+Looks like this should work. There is no SSE here, but it should work
+Now all I need is to assemble this, and generate the byte code. I used gcc for this.
+I generate the .o file, and dump it's disassembly into a text file
+
+{% highlight bash %}
+gcc -g -c simplelooptest.s -m64 && objdump -d -M intel simplelooptest.o > test.out
+{% endhighlight %}
+
+Manually parsing the dissassembly for the byte code is a pain, so I wrote up
+a quick F# script that does that for me.
+You can see the script [here][8].
+Just give it the full path to `test.out` and it prints out the byte array to the debugger.
+
+How do you actually use the byte code in C#?
+You need to allocate executable memory space using `VirtualAlloc` and copy the byte array there.
+Then use `Marshal.GetDelegateForFunctionPointer()` to actually execute the instructions with the
+correct method signature.
+
+You can see that below
+
+{% highlight csharp %}
+using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+
+namespace ConsoleTest
+{
+   internal class Program
+   {
+      #region Native stuff
+
+      [Flags]
+      public enum AllocationType : uint
+      {
+         COMMIT = 0x1000,
+         RESERVE = 0x2000,
+         RESET = 0x80000,
+         LARGE_PAGES = 0x20000000,
+         PHYSICAL = 0x400000,
+         TOP_DOWN = 0x100000,
+         WRITE_WATCH = 0x200000
+      }
+
+      [Flags]
+      public enum MemoryProtection : uint
+      {
+         EXECUTE = 0x10,
+         EXECUTE_READ = 0x20,
+         EXECUTE_READWRITE = 0x40,
+         EXECUTE_WRITECOPY = 0x80,
+         NOACCESS = 0x01,
+         READONLY = 0x02,
+         READWRITE = 0x04,
+         WRITECOPY = 0x08,
+         GUARD_Modifierflag = 0x100,
+         NOCACHE_Modifierflag = 0x200,
+         WRITECOMBINE_Modifierflag = 0x400
+      }
+
+      public enum MemoryFreeType : uint
+      {
+         MEM_DECOMMIT = 0x4000,
+         MEM_RELEASE = 0x8000
+      }
+
+      [DllImport("kernel32.dll", SetLastError = true)]
+      private static extern IntPtr VirtualAlloc(IntPtr lpAddress, UIntPtr dwSize,
+         AllocationType flAllocationType, MemoryProtection flProtect);
+
+      [DllImport("kernel32.dll", SetLastError = true)]
+      private static extern bool VirtualProtect(IntPtr lpAddress, uint dwSize,
+         MemoryProtection flNewProtect, out MemoryProtection lpflOldProtect);
+
+      [DllImport("kernel32.dll", SetLastError = true)]
+      private static extern bool VirtualFree(IntPtr lpAddress, UIntPtr dwSize,
+         MemoryFreeType dwFreeType);
+
+      #endregion
+
+      private delegate double SumOfSquaresDelegate(int[] input, int size);
+
+      /// <summary>
+      /// Create the buffer for executable memory and return a ptr to it
+      /// </summary>
+      /// <param name="data">The byte code</param>
+      /// <returns>The ptr to executable memory</returns>
+      private static IntPtr SetupBuffer(byte[] data)
+      {
+         var codeBuffer = VirtualAlloc(IntPtr.Zero, new UIntPtr((uint)data.Length),
+            AllocationType.COMMIT | AllocationType.RESERVE,
+            MemoryProtection.READWRITE);
+
+         Marshal.Copy(data, 0, codeBuffer, data.Length);
+         MemoryProtection oldProtection;
+         VirtualProtect(codeBuffer, (uint)data.Length, MemoryProtection.EXECUTE_READ, out oldProtection);
+         return codeBuffer;
+      }
+
+      /// <summary>
+      /// Free memory allocated by VirtualAlloc
+      /// </summary>
+      /// <param name="ptr">ptr to VirtualAlloc memory</param>
+      private static void FreeBuffer(IntPtr ptr)
+      {
+         VirtualFree(ptr, UIntPtr.Zero, MemoryFreeType.MEM_RELEASE);
+      }
+
+      private static void Main(string[] args)
+      {
+         BenchmarkSumOfSquares();
+         Console.ReadLine();
+         return;
+      }
+
+      public static void BenchmarkSumOfSquares()
+      {
+         byte[] data = { 0x57, 0x48, 0x89, 0xd3, 0x48, 0x89, 0xcf, 0x31, 0xd2, 0x0f, 0x57, 0xd2, 0x41, 0x89, 0xd0, 0x49, 0x63, 0xc0, 0x48, 0x8d, 0x0c, 0x87, 0x8b, 0x01, 0x41, 0xff, 0xc0, 0x48, 0x83, 0xc1, 0x04, 0x0f, 0xaf, 0xc0, 0x66, 0x0f, 0x6e, 0xc8, 0x49, 0x63, 0xc0, 0xf3, 0x0f, 0xe6, 0xc9, 0xf2, 0x0f, 0x58, 0xd1, 0x48, 0x39, 0xd8, 0x72, 0xe0, 0x0f, 0x28, 0xc2, 0x5f, 0xc3, 0x90, 0x90, 0x90, 0x90, 0x90, };
+
+         var buffer = SetupBuffer(data);
+         var sumSquaresDelegate = (SumOfSquaresDelegate)Marshal.GetDelegateForFunctionPointer(buffer, typeof(SumOfSquaresDelegate));
+         const int size = 50000;
+         int[] input = new int[size];
+         var rand = new Random(13);
+         for (int i = 0; i < size; i++)
+         {
+            input[i] = rand.Next(10);
+         }
+
+         double res = 0, managedRes = 0;
+
+         Stopwatch sw = new Stopwatch();
+         sw.Start();
+         for (int i = 0; i < 10000; i++)
+         {
+            res = sumSquaresDelegate(input, size);
+         }
+         sw.Stop();
+         Console.WriteLine("assembly time: {0}", sw.Elapsed.TotalMilliseconds);
+
+         sw.Restart();
+         for (int i = 0; i < 10000; i++)
+         {
+            managedRes = SumOfSquaresManaged(input);
+         }
+         sw.Stop();
+         Console.WriteLine("managed time: {0}", sw.Elapsed.TotalMilliseconds);
+
+         FreeBuffer(buffer);
+         Console.WriteLine("sum of squares managed: {0}", managedRes);
+         Console.WriteLine("sum of squares assembly: {0}", res);
+      }
+
+      /// <summary>
+      /// C# version of sum of squares
+      /// </summary>
+      /// <param name="input">input data</param>
+      /// <returns>sum of squares</returns> 
+      public static double SumOfSquaresManaged(int[] input)
+      {
+         double temp = 0;
+         foreach (var item in input)
+         {
+            temp += (item * item);
+         }
+         return temp;
+      }
+   }
+}
+{% endhighlight %}
+
+This is something I wrote to benchmark the code comparing it to the C# equivalent implementation.
+
+assembly time: 1349.824
+managed time: 3829.5137
+sum of squares managed: 1432310
+sum of squares assembly: 1432310
 
 
 [1]:https://msdn.microsoft.com/en-us/library/7kcdt6fy.aspx 
@@ -296,3 +520,6 @@ _declspec(noinline) double SumOfSquares(int* input, size_t size)
 [3]:https://en.wikipedia.org/wiki/Magic_number_(programming)#Magic_debug_values
 [4]:https://msdn.microsoft.com/en-us/library/jj614596.aspx 
 [5]:https://msdn.microsoft.com/en-us/library/e7s85ffb.aspx 
+[6]:https://stackoverflow.com/questions/9334548/get-sse-version-without-asm-on-x64
+[7]:https://msdn.microsoft.com/en-us/library/vstudio/k87x524b(v=vs.100).aspx 
+[8]:https://gist.github.com/bdurrani/2ccb6e89a6156c1dac06 
