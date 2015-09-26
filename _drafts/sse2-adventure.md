@@ -4,36 +4,41 @@ title: Adventures in optimizations
 comments: false
 ---
 
-I started out trying to figure out how sqeeze out optimizations for 
-some SNR calculations, which involved the following bit of math.
+I started out trying to figure out how sqeeze out some more speed for some SNR calculations, which involved the following bit of math.
 
 <div>
 $$SumOfSquares = \sum_{i=0}^{N} data_i^2$$
 </div>
 
-The language of choice was C#, and this was for a 64-bit process.
+The language of choice was C# with Visual Studio 2013 for a 64-bit process for a 64-bit process.
 
 One idea was to try and use SSE to improve the throughput of the computation. 
-Specifically, SSE2, since all inputs involved 64-bit doubles. 
-SSE is all about 32-bit floats and ints. 
-But the .NET framework currently does not generate SSE instructions.
-The Visual Studio compiler (2012 and above) has the ability to auto-vectorize loops
-using SSE2. What better way to learn how to best use SSE2 than reading the compiler 
-output. With that, I set about reading up on 64-bit assembly code.
+But the .NET framework currently (as of .NET 4.2) does not generate SSE instructions.
+One way to do this would be to make a dll with the math function exported, and call that from C# using PInvoke.
+The Visual Studio compiler (2012 and above) has the ability to auto-vectorize loops.
+But this means that I have to add a C dll as a dependency of my C# application. 
+One more file to keep track just for a single calculation.
+
+But what if I could take the assembly code for that bit of code compiled using C and embed that directly into my C# application?
+
+This post is how I went about investigating this.
+
+This meant that I would need to actually write optimized some x64 assembly.
+I could just start with writing up some C code and look at what the compiler generates.
 
 ### Learning assembly with a compilers help
 
 64-bit assembly is a wide topic by itself. I had some a bit of x86 assembly back in my
 university days, but it's been a while.
-I was surprised to learn about the fact that there is only one calling convention for
-64-bit code, which is how **fastcall** was with x86 assembly. 
-You can read more about it [here][1], but the jist of it is that **fastcall** uses registers
-as the first four arguments, and the stack frame for the rest.
+There is only one calling convention for 64-bit code, which is how **fastcall** was with x86 assembly. 
+You can read more about it [here][1], but the jist of it is that **fastcall** uses registers as the first four arguments, and the stack frame for the rest for the functions parameters.
+Ofcourse, not of this matters if the compiler inlines your function.
 
-So I started writing bits of sample code and looking at the generated assembly. All the samples I show
-were tested using Visual Studio 2013.
+So I started writing bits of sample code and looking at the generated assembly.
+All the samples I show were tested using Visual Studio 2013.
 
-Here is a simple example, just to see how the calling convention works
+Here is a simple example, just to see how the calling convention works. `Test1()` takes a int, a double, and pointers of each kind.
+
 {% highlight c %}
 
 #include <stdlib.h>     // calloc
@@ -70,11 +75,10 @@ int main(int argc, _TCHAR* argv[])
 
 {% endhighlight %} 
 
-By itself a pretty useless program, but it will tell me how values and pointers are passed around
-and set up.
+By itself a pretty useless program, but it will tell me how values and pointers are passed around and set up.
 
-I changed the build configuration to x64, Debug. What follows is the disassembly for
-the Test1
+I build a x64 Debug verson. 
+And here is what you get.
 
 {% highlight c %}
 void Test1(int one, double two, int* three, double* four)
@@ -104,10 +108,9 @@ void Test1(int one, double two, int* three, double* four)
 
 The pointers are passed around via *r9* and *r8*. The 32-bit int was passed in 
 via *ecx* and the double via *XMM1*
-The use of `movsd` was new for me and looked into how those ops work.
 
-Let's take a look at what the optimized looks like. I have to modify the code a little
-to fight against inlining by modifying the function prototype a bit by specifying `noinline`.
+Let's take a look at what the optimized looks like.
+I have to modify the code a little to fight against inlining by modifying the function prototype a bit by specifying `noinline`.
 
 {% highlight c %}
 _declspec(noinline) void Test1(int one, double two, int* three, double* four) 
@@ -150,6 +153,8 @@ _declspec(noinline) double SumOfSquares(int* input, size_t size)
     return temp;
 }
 {% endhighlight %}
+
+Here is a debug output.
 
 {% highlight c %}
  _declspec(noinline) double SumOfSquares(int* input, size_t size)
@@ -200,17 +205,13 @@ _declspec(noinline) double SumOfSquares(int* input, size_t size)
 
 There are several things in this code that would make our lives easier if we ever had to debug this code.
 For example, copies of the function parameters are saved in the stack.
-[Guard bytes][3] (0xCCCCCCCC) are used when initializing the extra stack space for temporary variables on the stack.
-
-Now you can see what the assembly looks like for a simple little function like this.
+[Guard bytes][3] (0xCCCCCCCC) are used when initializing the extra stack space for temporary variables on the stack.  
 
 Let's repeat the process now, but for the release version. 
 I had to make some changes in the function to prevent it from being inlined.
 The release version is build with /Ox (Full optimization) turned on. 
 And since the purpose of this exercise is to speed things up, I want to make sure my loop gets vectorized. 
-So I turned on the [vectorization report][4] to verify this, and also used switched the floating model to [fast][5]
-
-I get the following
+So I turned on the [vectorization report][4] to verify this, and also used switched the floating model to [/fp:fast][5] 
 
 {% highlight c %}
 _declspec(noinline) double SumOfSquares(int* input, size_t size)
@@ -508,11 +509,22 @@ namespace ConsoleTest
 {% endhighlight %}
 
 This is something I wrote to benchmark the code comparing it to the C# equivalent implementation.
+It runs the two versions of the sum of squares a bunch of times and calculates the amount of time each run took.
 
+Here is the output of the console app for a release build.
+
+{% highlight bash %}
 assembly time: 1349.824
 managed time: 3829.5137
 sum of squares managed: 1432310
 sum of squares assembly: 1432310
+{% endhighlight %}
+ 
+Looks like the assembly version is about 3X faster than the plain C# version.
+I didn't expect there to be such a huge improvement.
+
+Next thing I'll try is to use SSE2 intrinsics and embed the byte code for that. 
+But that's for another post.
 
 
 [1]:https://msdn.microsoft.com/en-us/library/7kcdt6fy.aspx 
