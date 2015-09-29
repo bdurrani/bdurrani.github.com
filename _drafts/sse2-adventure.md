@@ -1,41 +1,40 @@
 ---
 layout: post
-title: Adventures in optimizations
+title: Inline assembly in C#
 comments: false
 ---
 
-I started out trying to figure out how sqeeze out some more speed for some SNR calculations, which involved the following bit of math.
+I was working on trying to figure out how sqeeze out some more speed for some calculations, which involved the following bit of math.
 
 <div>
 $$SumOfSquares = \sum_{i=0}^{N} data_i^2$$
 </div>
 
-The language of choice was C# with Visual Studio 2013 for a 64-bit process for a 64-bit process.
+The language of choice was C# with Visual Studio 2013 for a 64-bit process.
 
 One idea was to try and use SSE to improve the throughput of the computation. 
-But the .NET framework currently (as of .NET 4.2) does not generate SSE instructions.
-One way to do this would be to make a dll with the math function exported, and call that from C# using PInvoke.
-The Visual Studio compiler (2012 and above) has the ability to auto-vectorize loops.
-But this means that I have to add a C dll as a dependency of my C# application. 
+Unfortunately the .NET framework currently (as of .NET 4.2) does not generate SSE instructions as part of its JIT compiler.
+A workaround would be to make a dll with the math function exported, and call that exported function from C# using PInvoke.
+The Visual Studio compiler (2012 and above) is an excellant optimizing compiler with the ability to [auto-vectorize loops][9].
+But then I would have to add a C dll as a dependency of my C# application. 
 One more file to keep track just for a single calculation.
 
-But what if I could take the assembly code for that bit of code compiled using C and embed that directly into my C# application?
+But what if I could take the assembly instructions generated for the C code and embed that directly into my C# application?
 
-This post is how I went about investigating this.
+I got a little obsessed with this idea, so I started investigating it.
 
-This meant that I would need to actually write optimized some x64 assembly.
-I could just start with writing up some C code and look at what the compiler generates.
+I needed to learn some x64 assembly.
+One way to start would be to write up some C code and look at what the compiler generates.
 
 ### Learning assembly with a compilers help
 
-64-bit assembly is a wide topic by itself. I had some a bit of x86 assembly back in my
-university days, but it's been a while.
+64-bit assembly is a wide topic by itself.
+I had worked with a bit of x86 assembly back in my university days, but that's about it.
 There is only one calling convention for 64-bit code, which is how **fastcall** was with x86 assembly. 
-You can read more about it [here][1], but the jist of it is that **fastcall** uses registers as the first four arguments, and the stack frame for the rest for the functions parameters.
-Ofcourse, not of this matters if the compiler inlines your function.
+You can read more about it [here][1], but the jist of it is that **fastcall** uses registers as the first four parameters, and the stack frame for the rest for the functions parameters.
 
-So I started writing bits of sample code and looking at the generated assembly.
-All the samples I show were tested using Visual Studio 2013.
+So I started writing bits of test code and looking at the generated assembly.
+All the samples I show were tested using Visual Studio 2013 Update 5.
 
 Here is a simple example, just to see how the calling convention works. `Test1()` takes a int, a double, and pointers of each kind.
 
@@ -75,10 +74,9 @@ int main(int argc, _TCHAR* argv[])
 
 {% endhighlight %} 
 
-By itself a pretty useless program, but it will tell me how values and pointers are passed around and set up.
+This is a useless little program, but it will tell me how values and pointers are passed around and set up when calling a function.
 
-I build a x64 Debug verson. 
-And here is what you get.
+Here is what the x64 Debug version looks like.
 
 {% highlight c %}
 void Test1(int one, double two, int* three, double* four)
@@ -87,7 +85,7 @@ void Test1(int one, double two, int* three, double* four)
 000000013F321025 4C 89 44 24 18       mov         qword ptr [rsp+18h],r8        // int* three
 000000013F32102A F2 0F 11 4C 24 10    movsd       mmword ptr [rsp+10h],xmm1     // double two
 000000013F321030 89 4C 24 08          mov         dword ptr [rsp+8],ecx         // int one
-000000013F321034 57                   push        rdi                           // non-optimized code artifact
+000000013F321034 57                   push        rdi                           // non-volatile register
      9:     *three = one + 1;
 000000013F321035 8B 44 24 10          mov         eax,dword ptr [rsp+10h]       // load up one
 000000013F321039 FF C0                inc         eax                           // and add 1 to it
@@ -102,43 +100,38 @@ void Test1(int one, double two, int* three, double* four)
 000000013F321055 48 8B 44 24 28       mov         rax,qword ptr [rsp+28h]       // set the result to *four          
 000000013F32105A F2 0F 11 00          movsd       mmword ptr [rax],xmm0  
     11: }
-000000013F32105E 5F                   pop         rdi                           // non-optimized code artifact
+000000013F32105E 5F                   pop         rdi                           // restore register
 000000013F32105F C3  
 {% endhighlight %} 
 
-The pointers are passed around via *r9* and *r8*. The 32-bit int was passed in 
-via *ecx* and the double via *XMM1*
+The pointers are passed around via the *r9* and *r8* registers.
+The 32-bit int was passed in via *ecx* and the double via *XMM1* registers.
 
 Let's take a look at what the optimized looks like.
 I have to modify the code a little to fight against inlining by modifying the function prototype a bit by specifying `noinline`.
 
-{% highlight c %}
+Here is what you get:
+
+{% highlight c %} 
 _declspec(noinline) void Test1(int one, double two, int* three, double* four) 
-{% endhighlight %} 
-
-Here is what you get 
-
-{% highlight c %}
-
      9:     *three = one + 1;
     10:     *four = two + one;
-000000013FEC1000 F2 0F 58 0D F8 11 00 00 addsd       xmm1,mmword ptr [3FEC2200h]  
-000000013FEC1008 41 C7 00 02 00 00 00 mov         dword ptr [r8],2  
-000000013FEC100F F2 41 0F 11 09       movsd       mmword ptr [r9],xmm1  
+000000013FEC1000 F2 0F 58 0D F8 11 00 00    addsd       xmm1,mmword ptr [3FEC2200h]  
+000000013FEC1008 41 C7 00 02 00 00 00       mov         dword ptr [r8],2  
+000000013FEC100F F2 41 0F 11 09             movsd       mmword ptr [r9],xmm1  
     11: }
-000000013FEC1014 C3                   ret  
+000000013FEC1014 C3                         ret  
 
 {% endhighlight %}
 
 Small, compact and to the point, which is what you would expect from a optimizing compiler.
-This is the result of whole program optimization. 
+This is the result of whole program optimization.
+The values are being read from memory locations directly, and most of the operation has been optimized out.
+This is not what I need. 
 
-If I did want to generate some assembly code for use via C#, I would have to use a modified version of
-the non-optimized code for it to avoid making use of hard-coded memory references for storing data
-and instead, loading up data from registers.
+If I did want to generate some assembly code for use via C#, I would have to use a modified version of the non-optimized code for it to avoid making use of hard-coded memory references for storing data and instead, loading up data from registers.
 
-Maybe I should look at something similar to my original problem, which
-is manipulating arrays of data.
+Maybe I should look at something similar to my original problem, which is manipulating arrays of data.
 
 How about something like this
 
@@ -154,14 +147,14 @@ _declspec(noinline) double SumOfSquares(int* input, size_t size)
 }
 {% endhighlight %}
 
-Here is a debug output.
+Here is a debug build's output.
 
 {% highlight c %}
  _declspec(noinline) double SumOfSquares(int* input, size_t size)
     14: {
 000000013FEB3410 48 89 54 24 10       mov         qword ptr [temp],rdx      // saving registers on the
 000000013FEB3415 48 89 4C 24 08       mov         qword ptr [rsp+8],rcx     // stack for debugging easy
-000000013FEB341A 57                   push        rdi                       // see [this article][2]
+000000013FEB341A 57                   push        rdi                       
 000000013FEB341B 48 83 EC 20          sub         rsp,20h                   // space for local variables 
 000000013F22341F 48 8B FC             mov         rdi,rsp  
 000000013F223422 B9 08 00 00 00       mov         ecx,8  
@@ -203,6 +196,7 @@ Here is a debug output.
 000000013F22349C C3                   ret  
 {% endhighlight %}
 
+I got a lot of help from [this article][2] about understanding optimized x64 assembly.
 There are several things in this code that would make our lives easier if we ever had to debug this code.
 For example, copies of the function parameters are saved in the stack.
 [Guard bytes][3] (0xCCCCCCCC) are used when initializing the extra stack space for temporary variables on the stack.  
@@ -216,51 +210,27 @@ So I turned on the [vectorization report][4] to verify this, and also used switc
 {% highlight c %}
 _declspec(noinline) double SumOfSquares(int* input, size_t size)
     14: {
-000000013F881000 48 89 5C 24 08       mov         qword ptr [rsp+8],rbx    // save size
-000000013F881005 57                   push        rdi                      // volatile register 
+000000013F881000 48 89 5C 24 08       mov         qword ptr [rsp+8],rbx    // save size on stack
+000000013F881005 57                   push        rdi                      // non-volatile register 
 000000013F881006 48 83 EC 20          sub         rsp,20h                  // make space for temp vars 
 000000013F88100A 48 8B DA             mov         rbx,rdx  
 000000013F88100D 48 8B F9             mov         rdi,rcx  
-    15:     // add a rand() call here to prevent inline
+    15:     // add a rand() call here to prevent inlining
     16:     double temp = rand();
-000000013F881010 FF 15 0A 11 00 00    call        qword ptr [3F882120h]  
+000000013F881010 FF 15 0A 11 00 00    call        qword ptr [3F882120h]     // ignore this
     17:     temp = 0;
     18:     for (int i = 0; i < size; i++)
-000000013F881016 33 D2                xor         edx,edx               // clear the result of rand()
-000000013F881018 0F 57 D2             xorps       xmm2,xmm2             // clear 
+000000013F881016 33 D2                xor         edx,edx                   // clear the result of rand()
+000000013F881018 0F 57 D2             xorps       xmm2,xmm2                 // clear 
 000000013F88101B 44 8B C2             mov         r8d,edx  
 000000013F88101E 48 83 FB 04          cmp         rbx,4                     // cmp size and 4 
 000000013F881022 72 62                jb          000000013F881086          // jmp if size < 4 
-000000013F881024 83 3D F1 1F 00 00 02 cmp         dword ptr [__isa_available],2   // checks to see [if SSE4.2 is supported][6] 
+000000013F881024 83 3D F1 1F 00 00 02 cmp         dword ptr [__isa_available],2
 000000013F88102B 7C 59                jl          000000013F881086          // jmp if not supported, which is true in
                                                                             // my case 
 000000013F88102D 48 8B C3             mov         rax,rbx  
 000000013F881030 48 8B CB             mov         rcx,rbx  
-000000013F881033 0F 28 CA             movaps      xmm1,xmm2  
-000000013F881036 83 E0 03             and         eax,3  
-000000013F881039 44 8D 4A 02          lea         r9d,[rdx+2]  
-000000013F88103D 48 2B C8             sub         rcx,rax  
-    19:     {
-    20:         temp += (input[i] * input[i]);
-000000013F881040 F3 0F 7E 04 97       movq        xmm0,mmword ptr [rdi+rdx*4]  
-000000013F881045 49 63 C1             movsxd      rax,r9d  
-000000013F881048 41 83 C0 04          add         r8d,4  
-000000013F88104C 49 63 D0             movsxd      rdx,r8d  
-000000013F88104F 41 83 C1 04          add         r9d,4  
-000000013F881053 66 0F 38 40 C0       pmulld      xmm0,xmm0  
-000000013F881058 F3 0F E6 C0          cvtdq2pd    xmm0,xmm0  
-000000013F88105C 66 0F 58 D0          addpd       xmm2,xmm0  
-000000013F881060 F3 0F 7E 04 87       movq        xmm0,mmword ptr [rdi+rax*4]  
-000000013F881065 66 0F 38 40 C0       pmulld      xmm0,xmm0  
-000000013F88106A F3 0F E6 C0          cvtdq2pd    xmm0,xmm0  
-000000013F88106E 66 0F 58 C8          addpd       xmm1,xmm0  
-000000013F881072 48 3B D1             cmp         rdx,rcx  
-000000013F881075 72 C9                jb          000000013F881040  
-    17:     temp = 0;
-    18:     for (int i = 0; i < size; i++)
-000000013F881077 66 0F 58 D1          addpd       xmm2,xmm1  
-000000013F88107B 0F 28 C2             movaps      xmm0,xmm2  
-000000013F88107E 66 0F 15 C2          unpckhpd    xmm0,xmm2  
+.....   // SSE 4.2 code snipped since I can't run it
 000000013F881082 F2 0F 58 D0          addsd       xmm2,xmm0  
 000000013F881086 49 63 C0             movsxd      rax,r8d                   // jmp here if SSE4.2
                                                                             // is not supported 
@@ -294,15 +264,14 @@ _declspec(noinline) double SumOfSquares(int* input, size_t size)
 000000013F8810CD C3                   ret  
 {% endhighlight %}
 
+`__isa_available` checks to see [if SSE4.2 is supported][6].
 My current CPU does not support SSE4.2 so the code path skips all that goodness.
-If I have made `temp` an `int` instead of a `double`, the compiler would have generated 
-the [SSE2 integer arithmetic][7] instruction set.
+If I have made `temp` an `int` instead of a `double`, the compiler would have generated the [SSE2 integer arithmetic][7] instruction set.
 I actually did confirm this, but let's continue with what we have so far
 
 ### Generate assembly byte code
 
-So I have the assembly code I need to calculate sum of squares. 
-Let's see what that looks like
+Based on what I read earlier, I whipped up the following bit of code to calculate the sum of squares.
 
 {% highlight nasm %}
 # compile using gcc
@@ -338,7 +307,7 @@ pop rdi
 ret    
 {% endhighlight %}
 
-Looks like this should work. There is no SSE here, but it should work
+There is no SSE here, but it should work.
 Now all I need is to assemble this, and generate the byte code. I used gcc for this.
 I generate the .o file, and dump it's disassembly into a text file
 
@@ -346,8 +315,7 @@ I generate the .o file, and dump it's disassembly into a text file
 gcc -g -c simplelooptest.s -m64 && objdump -d -M intel simplelooptest.o > test.out
 {% endhighlight %}
 
-Manually parsing the dissassembly for the byte code is a pain, so I wrote up
-a quick F# script that does that for me.
+Manually parsing the dissassembly for the byte code is a pain, so I wrote up a quick F# script that does that for me.
 You can see the script [here][8].
 Just give it the full path to `test.out` and it prints out the byte array to the debugger.
 
@@ -356,7 +324,7 @@ You need to allocate executable memory space using `VirtualAlloc` and copy the b
 Then use `Marshal.GetDelegateForFunctionPointer()` to actually execute the instructions with the
 correct method signature.
 
-You can see that below
+I wrote a simple console application that shows this.
 
 {% highlight csharp %}
 using System;
@@ -454,6 +422,7 @@ namespace ConsoleTest
 
       public static void BenchmarkSumOfSquares()
       {
+        // The byte code for the bit of assembly listed above.
          byte[] data = { 0x57, 0x48, 0x89, 0xd3, 0x48, 0x89, 0xcf, 0x31, 0xd2, 0x0f, 0x57, 0xd2, 0x41, 0x89, 0xd0, 0x49, 0x63, 0xc0, 0x48, 0x8d, 0x0c, 0x87, 0x8b, 0x01, 0x41, 0xff, 0xc0, 0x48, 0x83, 0xc1, 0x04, 0x0f, 0xaf, 0xc0, 0x66, 0x0f, 0x6e, 0xc8, 0x49, 0x63, 0xc0, 0xf3, 0x0f, 0xe6, 0xc9, 0xf2, 0x0f, 0x58, 0xd1, 0x48, 0x39, 0xd8, 0x72, 0xe0, 0x0f, 0x28, 0xc2, 0x5f, 0xc3, 0x90, 0x90, 0x90, 0x90, 0x90, };
 
          var buffer = SetupBuffer(data);
@@ -508,7 +477,9 @@ namespace ConsoleTest
 }
 {% endhighlight %}
 
-This is something I wrote to benchmark the code comparing it to the C# equivalent implementation.
+This console app also benchmarks the byte code with it's C# equivalent. 
+Notice I'm not using unsafe C# here. 
+I probably should have since will generate code closer what the byte code looks like.
 It runs the two versions of the sum of squares a bunch of times and calculates the amount of time each run took.
 
 Here is the output of the console app for a release build.
@@ -522,6 +493,9 @@ sum of squares assembly: 1432310
  
 Looks like the assembly version is about 3X faster than the plain C# version.
 I didn't expect there to be such a huge improvement.
+I wouldn't recommend using this approach for production code. 
+It would be very tedious to maintain this manually, and I would trust the .NET JIT to improve the code performance over time without me having to rewrite the C# code.
+This was purely an academic exercise on my part.
 
 Next thing I'll try is to use SSE2 intrinsics and embed the byte code for that. 
 But that's for another post.
@@ -535,3 +509,4 @@ But that's for another post.
 [6]:https://stackoverflow.com/questions/9334548/get-sse-version-without-asm-on-x64
 [7]:https://msdn.microsoft.com/en-us/library/vstudio/k87x524b(v=vs.100).aspx 
 [8]:https://gist.github.com/bdurrani/2ccb6e89a6156c1dac06 
+[9]:https://msdn.microsoft.com/en-CA/library/hh872235.aspx 
