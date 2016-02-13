@@ -1,6 +1,6 @@
 name: bilal durrani
-markdown: redcarpet
-highlighter: pygments
+markdown: kramdown
+highlighter: rouge
 encoding: "utf-8"
 permalink: /blog/:categories/:year/:month/:day/:title.html
 safe: true
