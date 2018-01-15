@@ -1,6 +1,7 @@
 ---
 date: 2015-07-07T00:00:00Z
 title: Async-await and WaitHandles
+tags: ["csharp"]
 --- 
 
 The TPL is great but sometimes you have to work within a framework which schedules background tasks for you 

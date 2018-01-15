@@ -1,7 +1,7 @@
 ---
 date: 2015-10-01T00:00:00Z
 title: Inline assembly in C#
-tags: ["c#"]
+tags: ["csharp"]
 ---
 I was working on trying to figure out how sqeeze out some more speed for some calculations, which involved the following bit of math.
 

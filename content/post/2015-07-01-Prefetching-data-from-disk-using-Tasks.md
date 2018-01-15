@@ -1,7 +1,7 @@
 ---
 date: 2015-07-01T00:00:00Z
 title: Prefetch data from disk 
-tags: ["c#"]
+tags: ["csharp"]
 ---
 
 The task was simple. I have data on disk where the file sizes varied from 1kb to a couple of gigs. I needed to process the data 
