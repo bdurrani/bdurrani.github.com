@@ -1,4 +1,4 @@
-baseurl = "/"
+baseurl = "https://bilaldurrani.io"
 languageCode = "en-us"
 title = "Bilal Durrani"
 theme = "hugo-xmin"
@@ -41,5 +41,5 @@ PygmentsStyle = "friendly"
 #     weight = 4
 
 [params]
-    description = "A website built through Hugo and blogdown."
+    description = "A website built using Hugo"
     footer = "&copy; Bilal Durrani 2015 | [Github](https://github.com/bdurrani)"  
