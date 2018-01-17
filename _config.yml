@@ -1,9 +1,0 @@
-# https://jekyllrb.com/docs/configuration/
-name: bilal durrani
-markdown: kramdown
-highlighter: rouge
-encoding: "utf-8"
-permalink: /blog/:categories/:year/:month/:day/:title.html
-safe: true
-lsi: false
-
