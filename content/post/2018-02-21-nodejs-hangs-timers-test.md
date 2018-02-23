@@ -9,9 +9,6 @@ mocha based unit tests was always passing, the test process would never actually
 
 Here is what the class looked like, in it's pared down form.
 
-There was a timer running in the class that would clean up some resources in 
-regular intervals.
-
 ```
 class Blah {
 	constructor() {
@@ -19,23 +16,55 @@ class Blah {
 		const interval = 1000;
 		const run = () => {
 			this.dothings();
-			if (!this.stopCleanup) {
-				setTimeout(run, interval);
-			}
+            setTimeout(run, interval);
 		};
 		setTimeout(run, interval);
+	}
+	
+	methodUnderTest(){
+	    // do some other work
 	}
 
 	dothings() {
 		console.log('doing things');
-	}
-
-	cleanup() {
-		console.log('cleanup was called');
-		this.stopCleanup = true;
-	}
+	} 
 }
+```
 
+There was a timer running in the class that would clean up some resources in 
+regular intervals.
+
+
+Here is the mocha test that was passing, but also never exiting
+
+```
+describe('mocha hang', () => {
+	let b;
+	beforeEach(() => {
+		b = new Blah();
+	}); 
+
+	it('testing blahs method', () => { 
+		b.methodUnderTest();
+		expect(something).to.be.true; 
+	});
+});
+```
+
+This issue snuck up on me because I added a timer at some later 
+state
+
+Node stays alive while [there are timers still running](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
+or if there is any pending asynchronous I/O
+
+In fact, [mocha even mentions this](https://mochajs.org/) on their main page
+
+> “Hanging” most often manifests itself if a server is still 
+listening on a port, or a socket is still open, etc. 
+It can also be something like a runaway setInterval(), or even an errant Promise that never fulfilled.
+
+
+```
 describe('mocha hang', () => {
 	let b;
 	beforeEach(() => {
