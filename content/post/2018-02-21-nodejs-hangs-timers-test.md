@@ -36,7 +36,7 @@ regular intervals.
 
 Here is the mocha test that was passing, but also never exiting
 
-```
+``` js
 describe('mocha hang', () => {
 	let b;
 	beforeEach(() => {
@@ -67,7 +67,7 @@ There are a couple of ways to fix this.
 
 One way would be to mock time by using [sinon to fake time](http://sinonjs.org/releases/v4.4.2/fake-timers/).
 
-```
+``` js
 describe('mocha hang', () => {
 	let b;
 	beforeEach(() => {
