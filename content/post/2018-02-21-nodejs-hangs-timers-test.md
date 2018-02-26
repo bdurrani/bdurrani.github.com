@@ -8,7 +8,7 @@ mocha based unit tests was always passing, the test process would never actually
 
 Here is what the class looked like, in it's pared down form.
 
-```
+``` js
 class Blah {
 	constructor() {
 		this.stopCleanup = false;
