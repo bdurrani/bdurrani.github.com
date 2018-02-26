@@ -1,7 +1,6 @@
 ---
 title: "Mocha tests hanging with Timers"
 date: 2018-02-21
-draft: true
 ---
 
 When setting up unit tests for a specific JS class, I noticed that even though the 
