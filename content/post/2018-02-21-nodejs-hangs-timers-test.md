@@ -61,37 +61,47 @@ In fact, [mocha even mentions this](https://mochajs.org/) on their main page
 
 > “Hanging” most often manifests itself if a server is still 
 listening on a port, or a socket is still open, etc. 
-It can also be something like a runaway setInterval(), or even an errant Promise that never fulfilled.
+It can also be something like a runaway setInterval(), 
+or even an errant Promise that never fulfilled.
 
+There are a couple of ways to fix this.
+
+One way would be to mock time by using [sinon to fake time](http://sinonjs.org/releases/v4.4.2/fake-timers/).
 
 ```
 describe('mocha hang', () => {
 	let b;
 	beforeEach(() => {
-		// b = new Blah();
-		// this.clock = sinon.useFakeTimers();		
+		b = new Blah();
+		this.clock = sinon.useFakeTimers();		
 	});
 
 	afterEach(() => {
 		// this.clock.restore();
-		// if(b){
-		// 	b.cleanup();
-		// }
 	});
 
-	it('should time out after 500 ms', () => {
-		let timedOut = false;
-
-		const interval = 1000;
-		const run = () => {
-			console.log('im in the test');
-			setTimeout(run, interval);
-		};
-		setTimeout(run, interval);
-		expect(timedOut).be.false;
-		// this.clock.tick(510);
-		// expect(timedOut).be.true;
-		// this.clock.tick(1500);
+	it('testing blahs method', () => { 
+		b.methodUnderTest();
+		expect(something).to.be.true; 
 	});
 });
 ```
+
+The advantage of this is that you can now control how much time
+is passing in the test and actually control and unit test the 
+timers.
+
+
+Another solution would be to enable/disable the timer specifically 
+before and after each test.
+This might nnot be the best solution. Now you have to expose a way 
+to start and stop the timer. You are also dependant on the timer interval.
+If you start a timer with a long interval, the test wont exit until
+the interval completes.
+
+A third solution is one i learnt about recently. You can tell the Nodejs 
+event loop to not stay alive for a timer by using [timeout.unref()](https://nodejs.org/api/timers.html#timers_timeout_unref).
+Again, I don't recommend this solution. It's too invasive and mostly 
+likely will force you to refactor your code some more.
+Not to mention the note in the documentation for that function 
+that warns of the performance impact of overusing this function.
