@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Async await</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Quick Introduction to Async Await
+
+---
+
+# Agenda
+
+1. Introduction
+2. Deep-dive
+3. ...
+
+---
+
+# Brief introduction to promises
+
+```js
+const p = new Promise(
+    function (resolve, reject) { // (A)
+        // this runs when promise is created
+        if (···) {
+            resolve(value); // success
+        } else {
+            reject(reason); // failure
+        }
+    });
+``` 
+
+![Right-aligned image](./assets/images/promise-resolve-reject.png)
+---
+# Resolving promises
+
+```js
+asyncFunc()
+.then(function (value1) {
+    return 123;
+})
+.then(function (value2) {
+    console.log(value2); // 123
+});
+```
+
+Here we pass back a regular value
+---
+# Chaining multiple promises
+
+You can do this
+```js
+asyncFunc1()
+.then(result1 => {
+    asyncFunc2()
+    .then(result2 => {
+        ···
+    });
+});
+```
+---
+
+# Chaining promises
+This is a bit nicer
+
+```js
+asyncFunc1()
+.then(function (value1) {
+    return asyncFunc2();
+})
+.then(function (value2) {
+    ···
+})
+```
+
+---
+# Chaining promises
+Or even this
+
+```js
+asyncFunc1()
+.then(asyncFunc2)
+.then(asyncFunc3)
+```
+
+---
+# Errors using promises
+```js
+function timeout(ms, promise) {
+    return new Promise(function (resolve, reject) {
+        promise.then(resolve);
+        setTimeout(function () {
+            reject(new Error('Timeout after '+ms+' ms')); // (A)
+        }, ms);
+    });
+}
+
+timeout(5000, httpGet('http://example.com/file.txt'))
+.then(function (value) {
+    console.log('Contents: ' + value);
+})
+.catch(function (reason) {
+    console.error('Error or timeout', reason);
+});
+```
+
+Hi
+---
+
+# Another exercise
+
+```js
+// an immediately resolved promise
+let promise = new Promise(resolve => resolve("done!")); 
+promise.then(alert); 
+alert('code finished');
+```
+???
+Notes
+---
+
+# What is the bug here?
+
+```js
+function foo() {
+    const promise = asyncFunc();
+    promise.then(result => {
+        
+    });
+
+    return promise;
+}
+```
+---
+
+# Example
+
+```js 
+fetch('https://some.url')
+  .then((res) => {
+    console.log(res)
+  })
+  .catch(err => {
+    console.error(err)
+  })
+
+export function asyncWaitUntilWithExponentialBackoff(predicate, maxTime) {
+	return new Promise((resolve, reject) => {
+		if (!maxTime) {
+			maxTime = 30000;
+		}
+
+        let retries = 0;
+        let timeout = retries *2 * 100;
+		const checkFunc = () => {
+			if (predicate()) {
+				resolve();
+			} else if (retries++ * 100 > maxTime) {
+				reject('timeout');
+			} else {
+				setTimeout(checkFunc, timeout);
+			}
+		};
+		checkFunc();
+	});
+}
+```
+???
+https://raw.githubusercontent.com/googlesamples/web-fundamentals/gh-pages/fundamentals/primers/story.json
+---
+
+# Resources
+[Test](http://exploringjs.com/es6/ch_promises.html#sec_three-ways-understanding-promises)
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
