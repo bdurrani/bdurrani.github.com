@@ -27,9 +27,9 @@ class: center, middle
 
 # Agenda
 
-1. Introduction
-2. Deep-dive
-3. ...
+1. Promises
+2. Some examples
+3. Async-Await
 
 ---
 
@@ -103,28 +103,24 @@ asyncFunc1()
 ---
 # Errors using promises
 ```js
-function timeout(ms, promise) {
-    return new Promise(function (resolve, reject) {
-        promise.then(resolve);
-        setTimeout(function () {
-            reject(new Error('Timeout after '+ms+' ms')); // (A)
-        }, ms);
-    });
-}
-
-timeout(5000, httpGet('http://example.com/file.txt'))
-.then(function (value) {
-    console.log('Contents: ' + value);
-})
-.catch(function (reason) {
-    console.error('Error or timeout', reason);
-});
+var jsonPromise = new Promise(function(resolve, reject) {
+    // JSON.parse throws an error if you feed it some
+    // invalid JSON, so this implicitly rejects:
+    resolve(JSON.parse("This is sucky JSON"));
+  });
+  
+  jsonPromise.then(function(data) {
+    // This never happens:
+    console.log("It worked!", data);
+  }).catch(function(err) {
+    // Instead, this happens:
+    console.log("It failed!", err);
+  })
 ```
 
-Hi
 ---
 
-# Another exercise
+# What will you see when you run this?
 
 ```js
 // an immediately resolved promise
@@ -132,6 +128,20 @@ let promise = new Promise(resolve => resolve("done!"));
 promise.then(alert); 
 alert('code finished');
 ```
+???
+Notes
+---
+# What will you see when you run this?
+
+```js
+// an immediately resolved promise
+let promise = new Promise(resolve => resolve("done!")); 
+promise.then(alert); 
+alert('code finished');
+```
+
+You will see an alert with `code finished`, followed by a 
+a plain alert
 ???
 Notes
 ---
