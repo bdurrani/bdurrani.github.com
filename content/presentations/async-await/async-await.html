@@ -48,8 +48,27 @@ const p = new Promise(
 ``` 
 
 ![Right-aligned image](./assets/images/promise-resolve-reject.png)
+???
+Promise is a one shot thing.
+
+There are two states.
 ---
-# Resolving promises
+# The Promise body executes immediately
+
+```js
+let promise = new Promise(function(resolve, reject) {
+    // the function is executed automatically when the promise is constructed
+  
+    alert(resolve); // function () { [native code] }
+    alert(reject);  // function () { [native code] }
+  
+    // after 1 second signal that the job is done with the result "done!"
+    setTimeout(() => resolve("done!"), 1000);
+  });
+```
+---
+
+# Passing values thru promises
 
 ```js
 asyncFunc()
@@ -160,6 +179,21 @@ function foo() {
 ```
 ---
 
+# What is the bug here?
+
+```js
+function foo() {
+    const promise = asyncFunc();
+    promise.then(result => {
+        
+    });
+
+    return promise;
+}
+```
+We need to return the result of the `then()`.
+
+---
 # Example
 
 ```js 
@@ -194,6 +228,11 @@ export function asyncWaitUntilWithExponentialBackoff(predicate, maxTime) {
 ```
 ???
 https://raw.githubusercontent.com/googlesamples/web-fundamentals/gh-pages/fundamentals/primers/story.json
+---
+
+# Async await
+Use examples from here 
+https://codeburst.io/javascript-es-2017-learn-async-await-by-example-48acc58bad65
 ---
 
 # Resources
