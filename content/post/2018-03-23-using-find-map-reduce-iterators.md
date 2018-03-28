@@ -1,7 +1,6 @@
 ---
 title: "Using find/map/reduce with javascript iterators"
 date: 2018-03-23
-draft: true
 ---
 
 I come from the .NET world, where I'm used to using LINQ for massaging
