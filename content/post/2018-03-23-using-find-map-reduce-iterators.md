@@ -19,7 +19,8 @@ intention of the code very clear.
 
 To my surprise, I learnt that I can't write code like this for other
 data structures like [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map).
-because these expose their data as [iterators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol).
+because these expose their data as [iterators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol)
+and not as Arrays.
 
 Iterators are a whole other beast introduced in ES6, and the only built-in way
 to use filter/map with them is to convert then to Arrays.
@@ -43,7 +44,9 @@ Luckily `wu` is a pretty well organized library and while my
 javascript foo is not that strong, 
 I was able to break down the basic functionality.
 
-We can start with something like this.
+Lets start by trying to create an object that acts as a proxy for iterables. 
+We can add methods on that object like filter and map later on. 
+I'll call it `Chain` just because I want to use this to chain a bunch of methods on iterators.
 
 ```js
 class Chain {
@@ -94,7 +97,11 @@ for (const item of new Chain([1, 2, 3]).filter(x => x === 1)) {
 }
 ```
 
-This will print `1`
+Output
+
+```bash
+1
+```
 
 I don't want to keep typing `new Chain()` every time, so I'll add a little helper
 
@@ -112,7 +119,7 @@ for (const item of chain([1, 2, 3]).filter(x => x === 1)) {
 ```
 
 The problem is we can't chain these together. 
-We need the functions to return another instance of `Chain`
+We need `map` to return another instance of `Chain`
 
 Lets modify `Chain` to do that.
 
@@ -193,5 +200,130 @@ for (const item of chain([1, 2, 3, 4]).filter(x => x % 2 === 0).map(x => x + 1))
 	console.log(item);
 }
 ```
+Output
 
-This will print `3` and `5`.
+```bash
+3
+5
+```
+
+And what about reduce?
+
+```js
+	reduce(fn, initial) {
+		let val = initial;
+		let first = true;
+		for (let x of this) {
+			if (val === undefined) {
+				val = x;
+				first = false;
+				continue;
+			}
+			val = fn(val, x);
+		}
+		return val;
+	}
+```
+This is a simpler one, since we're not going to return an iterator from this function.
+If we are not provided with an initial value, we will use the first item in the iterator as the initial value.
+
+Now you can do this
+
+```js
+const item2 = chain([1, 2, 3, 4])
+				.filter(x => x % 2 === 0)
+				.map(x => x + 1)
+				.reduce((x, y) => x + y);
+console.log(`reduce: ${item2}`);
+```
+Output
+
+```bash
+reduce: 8
+```
+
+This is what the complete class looks like
+
+```js
+class Chain {
+	constructor(iterable) {
+		this.iterator = Chain.getIterator(iterable);
+	}
+
+	next() {
+		return this.iterator.next.call(this.iterator);
+	}
+
+	[Symbol.iterator]() {
+		return this.iterator;
+	}
+
+	/**
+	 * internal filter
+	 * @param fn
+	 * @returns {IterableIterator<*>}
+	 * @private
+	 */
+	* _filter(fn) {
+		for (let x of this) {
+			if (fn(x)) {
+				yield x;
+			}
+		}
+	}
+
+	/**
+	 * wrapper filter
+	 * @param fn
+	 * @returns {*}
+	 */
+	filter(fn = Boolean) {
+		return chain(this._filter(fn));
+	}
+
+	* _map(fn) {
+		for (let x of this) {
+			yield fn(x);
+		}
+	};
+
+	map(fn) {
+		return chain(this._map(fn));
+	}
+
+	reduce(fn, initial) {
+		let val = initial;
+		let first = true;
+		for (let x of this) {
+			if (val === undefined) {
+				val = x;
+				first = false;
+				continue;
+			}
+			val = fn(val, x);
+		}
+		return val;
+	}
+
+	/**
+	 * Return whether a thing is iterable.
+	 */
+	static isIterable(thing) {
+		return thing && typeof thing[Symbol.iterator] === 'function';
+	};
+
+	/**
+	 * Get the iterator for the thing or throw an error.
+	 * @param thing
+	 * @return {*}
+	 */
+	static getIterator(thing) {
+		if (Chain.isIterable(thing)) {
+			return thing[Symbol.iterator]();
+		}
+		throw new TypeError('Not iterable: ' + thing);
+	};
+}
+```
+
+We can add lots more functionality to this as needed, but this is a good starting point. 
