@@ -326,3 +326,7 @@ class Chain {
 ```
 
 We can add lots more functionality to this as needed, but this is a good starting point. 
+
+Here is also a gist for the whole thing
+
+{{< gist bdurrani 8dac1f03b429a48f3f36085f00b6d1d5 >}}
