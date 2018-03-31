@@ -159,8 +159,7 @@ promise.then(alert);
 alert('code finished');
 ```
 
-You will see an alert with `code finished`, followed by a 
-a plain alert
+You will see an alert with `code finished`, followed by a plain alert
 ???
 Notes
 ---
@@ -194,46 +193,83 @@ function foo() {
 We need to return the result of the `then()`.
 
 ---
-# Example
 
-```js 
-fetch('https://some.url')
-  .then((res) => {
-    console.log(res)
-  })
-  .catch(err => {
-    console.error(err)
-  })
+# Quick examples
 
-export function asyncWaitUntilWithExponentialBackoff(predicate, maxTime) {
-	return new Promise((resolve, reject) => {
-		if (!maxTime) {
-			maxTime = 30000;
-		}
+```js
+function doubleAfter2Seconds(x) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(x * 2);
+      }, 2000);
+    });
+  }
 
-        let retries = 0;
-        let timeout = retries *2 * 100;
-		const checkFunc = () => {
-			if (predicate()) {
-				resolve();
-			} else if (retries++ * 100 > maxTime) {
-				reject('timeout');
-			} else {
-				setTimeout(checkFunc, timeout);
-			}
-		};
-		checkFunc();
-	});
-}
+doubleAfter2Seconds(10).then((r) => {
+    console.log(r);
+});
 ```
-???
-https://raw.githubusercontent.com/googlesamples/web-fundamentals/gh-pages/fundamentals/primers/story.json
 ---
 
-# Async await
-Use examples from here 
-https://codeburst.io/javascript-es-2017-learn-async-await-by-example-48acc58bad65
+# Slightly more complicated example
+
+What if we wanted to pass multiple values?
+
+```js
+let sum =   doubleAfter2Seconds(10)
+          + doubleAfter2Seconds(20)
+          + doubleAfter2Seconds(30);
+console.log(sum);
+```
+
 ---
+# Slightly more complicated example
+
+What if we wanted to pass multiple values?
+
+```js
+let sum =   doubleAfter2Seconds(10)
+          + doubleAfter2Seconds(20)
+          + doubleAfter2Seconds(30);
+console.log(sum);
+```
+This won't work.
+---
+# Slightly more complicated example
+
+What if we wanted to pass multiple values?
+
+```js
+function addPromise(x){
+    return new Promise(resolve => {
+      doubleAfter2Seconds(10).then((a) => {
+        doubleAfter2Seconds(20).then((b) => {
+          doubleAfter2Seconds(30).then((c) => {
+            resolve(x + a + b + c);
+          })
+        })
+      })
+    });
+  }
+```
+Welcome to callback hell, again...
+---
+# Slightly more complicated example
+
+What if we wanted to pass multiple values?
+
+```js
+async function addAsync(x) {
+    const a = await doubleAfter2Seconds(10);
+    const b = await doubleAfter2Seconds(20);
+    const c = await doubleAfter2Seconds(30);
+    return x + a + b + c;
+  }
+```
+---
+#Async/Await
+---
+
 
 # Resources
 [Test](http://exploringjs.com/es6/ch_promises.html#sec_three-ways-understanding-promises)
