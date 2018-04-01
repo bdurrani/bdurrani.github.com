@@ -147,23 +147,9 @@ let promise = new Promise(resolve => resolve("done!"));
 promise.then(alert); 
 alert('code finished');
 ```
-???
-Notes
----
-# What will you see when you run this?
-
-```js
-// an immediately resolved promise
-let promise = new Promise(resolve => resolve("done!")); 
-promise.then(alert); 
-alert('code finished');
-```
-
+--
 You will see an alert with `code finished`, followed by a plain alert
-???
-Notes
 ---
-
 # What is the bug here?
 
 ```js
@@ -176,20 +162,7 @@ function foo() {
     return promise;
 }
 ```
----
-
-# What is the bug here?
-
-```js
-function foo() {
-    const promise = asyncFunc();
-    promise.then(result => {
-        
-    });
-
-    return promise;
-}
-```
+--
 We need to return the result of the `then()`.
 
 ---
