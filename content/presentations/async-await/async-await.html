@@ -21,7 +21,7 @@
 
 class: center, middle
 
-# Quick Introduction to Async Await
+# Quick(ish) Introduction to Async Await
 
 ---
 
@@ -120,7 +120,8 @@ asyncFunc1()
 ```
 
 ---
-# Errors using promises
+# Error handling with Promises
+
 ```js
 var jsonPromise = new Promise(function(resolve, reject) {
     // JSON.parse throws an error if you feed it some
@@ -136,7 +137,15 @@ var jsonPromise = new Promise(function(resolve, reject) {
     console.log("It failed!", err);
   })
 ```
+---
 
+# What will you see when you run this?
+
+```js
+// an immediately resolved promise
+let promise = new Promise(resolve => resolve("done!")); 
+promise.then(alert); 
+```
 ---
 
 # What will you see when you run this?
@@ -149,6 +158,8 @@ alert('code finished');
 ```
 --
 You will see an alert with `code finished`, followed by a plain alert
+`then` handlers are asynchronous.
+
 ---
 # What is the bug here?
 
@@ -167,7 +178,7 @@ We need to return the result of the `then()`.
 
 ---
 
-# Quick examples
+# Examples
 
 ```js
 function doubleAfter2Seconds(x) {
@@ -255,15 +266,58 @@ async function f2() {
 
 f().then(alert);
 ```
+--
 
 `f1` and `f2` are the same thing.
+
+Async functions *always* return a `Promise`.
+---
+# Await
+`await` can only used in async function.
+---
+# No top level async 😣
+Have to wrap it in an IIFE if using in Node
+```js
+( async() => {
+
+  await blah();
+
+})();
+```
+---
+# Error Handling
+
+```js
+async function f() {
+  await Promise.reject(new Error("Whoops!"));
+}
+```
+--
+Is the same as this
+```js
+async function f() {
+  throw new Error("Whoops!");
+}
+``` 
 ---
 
-# Await
+# Error Handling
+Just use try/catch. 
+No `catch()` needed.
+
+```js
+try{
+  await f();
+} catch (err) {
+  alert(err);
+}
+```
+
 ---
 
 # Resources
-[Test](http://exploringjs.com/es6/ch_promises.html#sec_three-ways-understanding-promises)
+[Promises](http://exploringjs.com/es6/ch_promises.html#sec_three-ways-understanding-promises)
+[Async/Await](https://javascript.info/async-await) 
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
