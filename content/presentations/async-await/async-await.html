@@ -21,7 +21,7 @@
 
 class: center, middle
 
-# Quick Introduction to Async Await
+# Quick(ish) Introduction to Async Await
 
 ---
 
@@ -120,7 +120,8 @@ asyncFunc1()
 ```
 
 ---
-# Errors using promises
+# Error handling with Promises
+
 ```js
 var jsonPromise = new Promise(function(resolve, reject) {
     // JSON.parse throws an error if you feed it some
@@ -136,7 +137,15 @@ var jsonPromise = new Promise(function(resolve, reject) {
     console.log("It failed!", err);
   })
 ```
+---
 
+# What will you see when you run this?
+
+```js
+// an immediately resolved promise
+let promise = new Promise(resolve => resolve("done!")); 
+promise.then(alert); 
+```
 ---
 
 # What will you see when you run this?
@@ -147,24 +156,11 @@ let promise = new Promise(resolve => resolve("done!"));
 promise.then(alert); 
 alert('code finished');
 ```
-???
-Notes
+--
+You will see an alert with `code finished`, followed by a plain alert
+`then` handlers are asynchronous.
+
 ---
-# What will you see when you run this?
-
-```js
-// an immediately resolved promise
-let promise = new Promise(resolve => resolve("done!")); 
-promise.then(alert); 
-alert('code finished');
-```
-
-You will see an alert with `code finished`, followed by a 
-a plain alert
-???
-Notes
----
-
 # What is the bug here?
 
 ```js
@@ -177,66 +173,151 @@ function foo() {
     return promise;
 }
 ```
----
-
-# What is the bug here?
-
-```js
-function foo() {
-    const promise = asyncFunc();
-    promise.then(result => {
-        
-    });
-
-    return promise;
-}
-```
+--
 We need to return the result of the `then()`.
 
 ---
-# Example
 
-```js 
-fetch('https://some.url')
-  .then((res) => {
-    console.log(res)
-  })
-  .catch(err => {
-    console.error(err)
-  })
+# Examples
 
-export function asyncWaitUntilWithExponentialBackoff(predicate, maxTime) {
-	return new Promise((resolve, reject) => {
-		if (!maxTime) {
-			maxTime = 30000;
-		}
+```js
+function doubleAfter2Seconds(x) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(x * 2);
+      }, 2000);
+    });
+  }
 
-        let retries = 0;
-        let timeout = retries *2 * 100;
-		const checkFunc = () => {
-			if (predicate()) {
-				resolve();
-			} else if (retries++ * 100 > maxTime) {
-				reject('timeout');
-			} else {
-				setTimeout(checkFunc, timeout);
-			}
-		};
-		checkFunc();
-	});
-}
+doubleAfter2Seconds(10).then((r) => {
+    console.log(r);
+});
 ```
-???
-https://raw.githubusercontent.com/googlesamples/web-fundamentals/gh-pages/fundamentals/primers/story.json
 ---
 
-# Async await
-Use examples from here 
-https://codeburst.io/javascript-es-2017-learn-async-await-by-example-48acc58bad65
+# Slightly more complicated example
+
+What if we wanted to pass multiple values?
+
+```js
+let sum =   doubleAfter2Seconds(10)
+          + doubleAfter2Seconds(20)
+          + doubleAfter2Seconds(30);
+console.log(sum);
+```
+
+---
+# Slightly more complicated example
+
+What if we wanted to pass multiple values?
+
+```js
+let sum =   doubleAfter2Seconds(10)
+          + doubleAfter2Seconds(20)
+          + doubleAfter2Seconds(30);
+console.log(sum);
+```
+This won't work.
+---
+# Slightly more complicated example
+
+What if we wanted to pass multiple values?
+
+```js
+function addPromise(x){
+    return new Promise(resolve => {
+      doubleAfter2Seconds(10).then((a) => {
+        doubleAfter2Seconds(20).then((b) => {
+          doubleAfter2Seconds(30).then((c) => {
+            resolve(x + a + b + c);
+          })
+        })
+      })
+    });
+  }
+```
+Welcome to callback hell, again...
+---
+# Slightly more complicated example
+
+What if we wanted to pass multiple values?
+
+```js
+async function addAsync(x) {
+    const a = await doubleAfter2Seconds(10);
+    const b = await doubleAfter2Seconds(20);
+    const c = await doubleAfter2Seconds(30);
+    return x + a + b + c;
+  }
+```
+---
+# Async
+
+This is a simple async function.
+
+```js
+async function f1() {
+  return Promise.resolve(1);
+}
+
+async function f2() {
+  return 1;
+}
+
+f().then(alert);
+```
+--
+
+`f1` and `f2` are the same thing.
+
+Async functions *always* return a `Promise`.
+---
+# Await
+`await` can only used in async function.
+---
+# No top level async 😣
+Have to wrap it in an IIFE if using in Node
+```js
+( async() => {
+
+  await blah();
+
+})();
+```
+---
+# Error Handling
+
+```js
+async function f() {
+  await Promise.reject(new Error("Whoops!"));
+}
+```
+--
+Is the same as this
+```js
+async function f() {
+  throw new Error("Whoops!");
+}
+``` 
+---
+
+# Error Handling
+Just use try/catch. 
+No `catch()` needed.
+
+```js
+try{
+  await f();
+} catch (err) {
+  alert(err);
+}
+```
+
 ---
 
 # Resources
-[Test](http://exploringjs.com/es6/ch_promises.html#sec_three-ways-understanding-promises)
+[Promises](http://exploringjs.com/es6/ch_promises.html#sec_three-ways-understanding-promises)
+[Async/Await](https://javascript.info/async-await) 
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
