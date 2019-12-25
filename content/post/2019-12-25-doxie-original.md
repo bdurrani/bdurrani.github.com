@@ -12,7 +12,7 @@ After some investigation, turns out an original Doxie is actually a [DocketPORT4
 If you still want to keep using your original Doxie, but you're ok with going without the
 other Doxie software, just grab the drivers from the [docucap website](http://www.docketport.com/DocketPORT-Support/Drivers-Downloads)
 
-I'll also upload the drivers for Windows 10 [here](./assets/doxie-original/DocketPORT467_v1.3.6_64bit_setup.exe).
+I'll also upload the drivers for Windows 10 [here](/assets/doxie-original/DocketPORT467_v1.3.6_64bit_setup.exe).
 This is current as of Dec 2019.
 
 I can confirm I can use the built-in Scanning software with my original Doxie now.
