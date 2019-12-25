@@ -7,5 +7,5 @@ author: Bilal Durrani
 This blog is a collection of things I have learned or am trying to learn about.
 
 ## About me
-I live in Toronto. I work at National Instruments, on whatever they need me to do.
+I live in Toronto. I work at Hubdoc, now Xero Canada.
 
