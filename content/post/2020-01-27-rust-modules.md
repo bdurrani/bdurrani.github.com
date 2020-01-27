@@ -208,3 +208,83 @@ Note: [Rust 2018 removed the requirement of always needing a `mod.rs` file](http
 So I wont use `mod.rs` for now.
 
 `bar` is a submodule of `foo`. So let's set that up by creating a folder called `foo` and moving `bar` into that folder.
+
+```foo/bar.rs
+use crate::constants;
+
+pub fn test_bar() {
+    println!("bar {}", constants::CONSTANT_A);
+    test_bar_internal();
+}
+
+fn test_bar_internal() {
+    println!("test_bar_internal");
+}
+```
+
+```foo.rs
+// declare bar to be a submodule of foo
+mod bar;
+
+pub fn test_foo() {
+    println!("test_foo");
+    bar::test_bar();
+}
+
+```
+
+No changes were required to `main.rs` since it never referenced `bar`.
+
+What happened here?
+Since `bar` is a submodule of `foo`, we want to maintain that relationship.
+We do that by [creating a folder with the same name as `foo`](https://doc.rust-lang.org/reference/items/modules.html#module-source-filenames) and moving `bar` there.
+
+So our application source folder now looks like this:
+
+```
+│   constants.rs
+│   foo.rs
+│   main.rs
+└───foo
+        bar.rs
+```
+
+Another way we could have split up `foo` and `bar` was by using `mod.rs`.
+Instead of having `foo.rs`, create `mod.rs` under the `foo` folder, and move the
+contents of `foo` into `mod.rs`.
+
+```foo\mod.rs
+// this is exactly the same as what used to be foo.rs
+mod bar;
+
+pub fn test_foo() {
+    println!("test_foo");
+    bar::test_bar();
+}
+
+```
+
+No other changes were required. This is the new folder structure.
+
+```
+│   constants.rs
+│   main.rs
+└───foo
+        bar.rs
+        mod.rs
+```
+
+Notice the lack of `foo.rs`. This configuration and the one prior are identical.
+This approach is how the module would have been organized prior to Rust 2018.
+
+We are done organizing each module into its own file.
+Now we can focus on each module on its own, add unit and integration tests
+in each module without having to worry about breaking other pieces.
+
+Some key pieces to remember
+
+- Every module needs a root. This is why we needed to add `mod foo` and `mod constants` to `main.rs`.
+- There can only be one root. You can't add `mod foo` to multiple files.
+- Understand what your module hierarchy looks like and use `self`, `super` and `crate` accordinly.
+- Really read the [docs](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html). Then read them again.
+- When in doubt, just type out the examples in the docs.
