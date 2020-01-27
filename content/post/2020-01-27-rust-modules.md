@@ -96,3 +96,43 @@ can reference an item in it's parent module.
 
 It's a bit ugly with all the `super`s, but we're not done yet.
 Let's move `foo` into it's own file next.
+
+```foo.rs
+use crate::constants;
+
+pub fn test_foo() {
+    println!("test_foo");
+    bar::test_bar();
+}
+
+mod bar {
+
+    pub fn test_bar() {
+        println!("bar {}", super::constants::CONSTANT_A);
+        test_bar_internal();
+    }
+
+    fn test_bar_internal() {
+        println!("test_bar_internal");
+    }
+}
+```
+
+Here is what `main.rs` looks like
+
+```
+mod constants;
+mod foo;
+
+mod one {
+    pub fn test1() {}
+}
+
+fn main() {
+    println!("Hello, world! {}", constants::CONSTANT_A);
+    one::test1();
+    foo::test_foo();
+}
+```
+
+Notice we have `mod foo`
