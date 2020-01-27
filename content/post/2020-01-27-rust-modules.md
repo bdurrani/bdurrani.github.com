@@ -5,9 +5,17 @@ date: 2020-01-27
 
 I've been writing small programs in rust as a way to learn the language. While trying to organize the application, I realized I didn't fully understand how the module system worked.
 
-A lot of the code out there says that if you have your code organized in a single rs file, you can just split up the module into different files and the same rules apply. I think I must have read the following document (https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html) 3-4 times before I fully started to absorb the material. That, and asking a tom of questions on the Rust Discord channel, which was really helpful.
+A lot of the code out there says that if you have your code organized in a single rs file, you can just split up the module into different files and the same rules apply.
+I think I must have read the [documentation](https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html) 3-4 times before I fully started to absorb the material.
 
-Let's say you have an amazing application, and you have all the code organized into modules, but everything is in one file. I assume you already have read the basics of using modules to control scope and privacy (https://doc.rust-lang.org/book/ch07-02-defining-modules-to-control-scope-and-privacy.html)
+So I started just trying things out and reading the docs some more to figure out the errors I was running into.
+That, and asking a tone of questions on the Rust Discord channel, which was really helpful.
+I figured I would write this up in case this helps out anyone else.
+
+I assume you already have read the basics of using modules to control scope and privacy .
+I won't cover that here. The [documentation](https://doc.rust-lang.org/book/ch07-02-defining-modules-to-control-scope-and-privacy.html) explains that very well.
+
+Let's say you have an amazing application, and you have all the code organized into modules, but everything is in one file.
 
 ```
 mod foo {
@@ -18,7 +26,7 @@ mod foo {
 
     mod bar {
         pub fn test_bar() {
-            println!("bar {}", super::super::constants::CONSTANT_A);
+          println!("bar {}", super::super::constants::CONSTANT_A);
 		  test_bar_internal();
         }
 
@@ -43,16 +51,20 @@ fn main() {
 }
 ```
 
-In general, a very useless little application. But it will demonstrate some of the things I learned along the way.
+In general, a very useless little application.
+But it will demonstrate some of the things I learned along the way.
+
+Some more about the code above.
 
 [`super`](https://doc.rust-lang.org/book/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html) is how a module
 can reference an item in it's parent module.
+So `super::super::` is a way of specifying a module that is the grand-parent of the module.
 
 If we were to look at how the modules are organized, they would look
 like this
 
 ```
-            main
+           main
         /   |       \
      foo constants  one
       /
@@ -66,23 +78,24 @@ We will discuss this more later on.
 Let's start splitting up the modules. First the `constants` module.
 I'll move the code in the constants module into a file in the same level as `main.rs`
 
-Constants.rs
+### constants.rs
 
-```
+{{< highlight rust >}}
 // Move the contents to a new file, without the mod block
 pub const CONSTANT_A: u8 = 5;
-```
+{{< / highlight >}}
 
-```Main.rs
+### main.rs
 
+{{< highlight rust >}}
 // declare the existance of the constants module
 mod constants;
 
 mod foo {
-    pub fn test_foo() {
-        println!("test_foo");
-        bar::test_bar();
-    }
+pub fn test_foo() {
+println!("test_foo");
+bar::test_bar();
+}
 
     mod bar {
         pub fn test_bar() {
@@ -94,6 +107,7 @@ mod foo {
             println!("test_bar_internal");
         }
     }
+
 }
 
 mod one {
@@ -105,7 +119,7 @@ fn main() {
     one::test1();
     foo::test_foo();
 }
-```
+{{< / highlight >}}
 
 I added comments to where I made the changes.
 
@@ -115,7 +129,8 @@ Even though the `constants` mod is in it's own file, it still has
 
 Let's move `foo` into it's own file next.
 
-```foo.rs
+### foo.rs
+{{< highlight rust >}}
 use crate::constants;
 
 pub fn test_foo() {
@@ -134,11 +149,11 @@ mod bar {
         println!("test_bar_internal");
     }
 }
-```
+{{< / highlight >}}
 
-Here is what `main.rs` looks like
+### main.rs
 
-```
+{{< highlight rust >}}
 mod constants;
 mod foo;
 
@@ -151,7 +166,7 @@ fn main() {
     one::test1();
     foo::test_foo();
 }
-```
+{{< / highlight >}}
 
 Notice we added `mod foo` to `main.rs`.
 We did the same when moving `constants` to its own file.
@@ -174,14 +189,14 @@ These are special files that must be included in any rust project.
 
 For example, if you were to rename `main.rs` to anything else, `cargo` will complain
 
-```
+{{< highlight bash >}}
 $ cargo build
-error: failed to parse manifest at `~\module-test\Cargo.toml`
+error: failed to parse manifest at `~/module-test/Cargo.toml`
 
 Caused by:
   no targets specified in the manifest
   either src/lib.rs, src/main.rs, a [lib] section, or [[bin]] section must be present
-```
+{{< / highlight >}}
 
 There must be a way to change the default target, but that is beyond the scope of this
 discussion.
@@ -208,8 +223,9 @@ Note: [Rust 2018 removed the requirement of always needing a `mod.rs` file](http
 So I wont use `mod.rs` for now.
 
 `bar` is a submodule of `foo`. So let's set that up by creating a folder called `foo` and moving `bar` into that folder.
+### foo/bar.rs
 
-```foo/bar.rs
+{{< highlight rust >}}
 use crate::constants;
 
 pub fn test_bar() {
@@ -220,9 +236,11 @@ pub fn test_bar() {
 fn test_bar_internal() {
     println!("test_bar_internal");
 }
-```
+{{< / highlight >}}
 
-```foo.rs
+### foo.rs
+
+{{<  highlight rust >}}
 // declare bar to be a submodule of foo
 mod bar;
 
@@ -231,7 +249,7 @@ pub fn test_foo() {
     bar::test_bar();
 }
 
-```
+{{<  / highlight >}}
 
 No changes were required to `main.rs` since it never referenced `bar`.
 
@@ -253,7 +271,8 @@ Another way we could have split up `foo` and `bar` was by using `mod.rs`.
 Instead of having `foo.rs`, create `mod.rs` under the `foo` folder, and move the
 contents of `foo` into `mod.rs`.
 
-```foo\mod.rs
+### foo/mod.rs
+{{< highlight rust >}}
 // this is exactly the same as what used to be foo.rs
 mod bar;
 
@@ -262,7 +281,7 @@ pub fn test_foo() {
     bar::test_bar();
 }
 
-```
+{{< / highlight >}}
 
 No other changes were required. This is the new folder structure.
 
