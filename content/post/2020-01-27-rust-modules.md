@@ -182,8 +182,7 @@ fn main() {
 Notice we added `mod foo` to `main.rs`.
 We did the same when moving `constants` to its own file.
 By adding it to `main.rs`, I'm declaring that my crate's module hierarchy
-is still the same as before:
-
+is still the same as before. I.E., the module `foo` is a child module of `main`
 ```
             main
         /    |      \
@@ -192,13 +191,12 @@ is still the same as before:
    bar
 ```
 
-I renamed `main` to `root`.
-What is root?
-In the case of my binary crate, my [crate root](https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html) is `main.rs`.
+In the case of my binary crate, my [crate root](https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html) module is `main`.
 If you have a library crate, the crate root would be `lib.rs`.
-These are special files that must be included in any rust project.
+These are files that must be included in any rust project.
 
-For example, if you were to rename `main.rs` to anything else, `cargo` will complain
+For example, if you were to rename `main.rs` to `blah.rs`, `cargo` will complain when
+I try to build the project:
 
 {{< highlight bash >}}
 $ cargo build
@@ -209,22 +207,21 @@ Caused by:
   either src/lib.rs, src/main.rs, a [lib] section, or [[bin]] section must be present
 {{< / highlight >}}
 
-There must be a way to change the default target, but that is beyond the scope of this
+There are ways to change the defaults, but that is beyond the scope of this
 discussion.
 
 Why did we add `mod foo` to `main.rs`?
-Because that is how our program was initially organized.
+We did that to maintain the module hierarchy that was set up when we started refactoring.
 
 Why did I add `use crate::constants`?
 [`use crate`](https://doc.rust-lang.org/book/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html) is an absolute path.
-If you want to use a function, we need to know its path.
-By saying `use crate::constants`, we are saying the `constants` module is the direct child of
-the crate root.
+If you want to use a function from a module, we need to know its path in the module hierarchy.
+By saying `use crate::constants`, we are bring the module `constants`, which happens to be a direct child of the crate root, in to the scope of module `foo`.
+
 Instead of using `use crate::constants`, we could have also used `use super::constants` because `constants` is the direct child of the crate root, like `foo`.
 Sibling modules in different files cannot refer to each other directly.
 They must reference each other via a common root, which in our case is `main`, which also happens
 to be the crate root.
-We didn't have to do this before because all the modules were in the same file.
 
 We still have one more step to do.
 The module `bar` is still in the same file as `foo`.
