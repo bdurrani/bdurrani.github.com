@@ -223,9 +223,9 @@ Sibling modules in different files cannot refer to each other directly.
 They must reference each other via a common root, which in our case is `main`, which also happens
 to be the crate root.
 
-We still have one more step to do.
+We have one more step left.
 The module `bar` is still in the same file as `foo`.
-Let's move `bar` to be it's own file.
+Let's move `bar` to be its own file.
 
 Note: [Rust 2018 removed the requirement of always needing a `mod.rs` file](https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html#no-more-modrs).
 So I wont use `mod.rs` for now.
@@ -265,7 +265,8 @@ What happened here?
 Since `bar` is a submodule of `foo`, we want to maintain that relationship.
 We do that by [creating a folder with the same name as `foo`](https://doc.rust-lang.org/reference/items/modules.html#module-source-filenames) and moving `bar` there.
 
-So our application source folder now looks like this:
+We started with a single file `main.rs`.
+Our application source folder now looks like this:
 
 ```
 │   constants.rs
@@ -301,7 +302,8 @@ No other changes were required. This is the new folder structure.
         mod.rs
 ```
 
-Notice the lack of `foo.rs`. This configuration and the one prior are identical.
+Notice the lack of `foo.rs`. 
+This configuration and the one prior are identical.
 This approach is how the module would have been organized prior to Rust 2018.
 
 We are done organizing each module into its own file.
