@@ -3,29 +3,36 @@ title: "Rust module system"
 date: 2020-01-27
 ---
 
-I've been writing small programs in rust as a way to learn the language. While trying to organize the application, I realized I didn't fully understand how the module system worked.
+I've been writing small programs in rust as a way to learn the language.
+While trying to organize one of the application, I realized I didn't fully understand how the module system worked.
 
-A lot of the code out there says that if you have your code organized in a single rs file, you can just split up the module into different files and the same rules apply.
-I think I must have read the [documentation](https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html) 3-4 times before I fully started to absorb the material.
-
-So I started just trying things out and reading the docs some more to figure out the errors I was running into.
+The official docs say that if you have your code organized in a single rs file, you can just split up the module into different files and the same rules apply.
+Without understanding how the module system actually work, you might be mislead into making
+false assumptions and hence run into errors that you might not understand how to solve.
+I think I must have read the [documentation](https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html) 3-4 times before I realize that just skimming over the the documentation wasn't going to work.
+ 
+So I went back to basics and broke down the problem.
 That, and asking a tone of questions on the Rust Discord channel, which was really helpful.
 I figured I would write this up in case this helps out anyone else.
 
 I assume you already have read the basics of using modules to control scope and privacy .
 I won't cover that here. The [documentation](https://doc.rust-lang.org/book/ch07-02-defining-modules-to-control-scope-and-privacy.html) explains that very well.
 
-Let's say you have an amazing application, and you have all the code organized into modules, but everything is in one file.
+Let's say you have an amazing application, and you have all the code broken down into modules, but everything is in one file.
 
-```
+### main.rs 
+
+{{< highlight rust >}}
 mod foo {
     pub fn test_foo() {
         println!("test_foo");
+        // call a function from bar
         bar::test_bar();
     }
 
     mod bar {
         pub fn test_bar() {
+          // call a constant from the constants module
           println!("bar {}", super::super::constants::CONSTANT_A);
 		  test_bar_internal();
         }
@@ -46,37 +53,37 @@ mod one {
 
 fn main() {
     println!("Hello, world! {}", constants::CONSTANT_A);
+    // call a function from module one
     one::test1();
+    // call a function from module foo
     foo::test_foo();
 }
-```
+{{< / highlight >}}
 
 In general, a very useless little application.
 But it will demonstrate some of the things I learned along the way.
 
-Some more about the code above.
-
 [`super`](https://doc.rust-lang.org/book/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html) is how a module
-can reference an item in it's parent module.
+can reference an item in its parent module.
 So `super::super::` is a way of specifying a module that is the grand-parent of the module.
 
 If we were to look at how the modules are organized, they would look
 like this
 
 ```
-           main
-        /   |       \
+            main
+        /    |      \
      foo constants  one
       /
    bar
 ```
 
-You have 3 modules (foo, constants and one) with a single parent main.
-We call main our **crate root**.
+You have 3 modules (`foo`, `constants` and `one`) with a single parent main.
+We will call `main` our **crate root** module.
 We will discuss this more later on.
 
 Let's start splitting up the modules. First the `constants` module.
-I'll move the code in the constants module into a file in the same level as `main.rs`
+I'll move the code in the constants module into its own file `constants.rs`
 
 ### constants.rs
 
@@ -123,7 +130,7 @@ fn main() {
 
 I added comments to where I made the changes.
 
-Notice however, we have maintained our module tree.
+Notice however, we have maintained our module hierarchy.
 Even though the `constants` mod is in it's own file, it still has
 `main.rs` as its root.
 
@@ -131,6 +138,7 @@ Let's move `foo` into it's own file next.
 
 ### foo.rs
 {{< highlight rust >}}
+// bring the constants module into scope
 use crate::constants;
 
 pub fn test_foo() {
@@ -141,6 +149,9 @@ pub fn test_foo() {
 mod bar {
 
     pub fn test_bar() {
+        // since constants is in the scope of the module foo
+        // we can refer to constants module by referring to it
+        // via the parent of the bar module.
         println!("bar {}", super::constants::CONSTANT_A);
         test_bar_internal();
     }
@@ -170,12 +181,12 @@ fn main() {
 
 Notice we added `mod foo` to `main.rs`.
 We did the same when moving `constants` to its own file.
-By adding it to `main.rs`, I'm declaring that my crate still tree looks
-like the following:
+By adding it to `main.rs`, I'm declaring that my crate's module hierarchy
+is still the same as before:
 
 ```
-           root
-        /   |       \
+            main
+        /    |      \
      foo constants  one
       /
    bar
