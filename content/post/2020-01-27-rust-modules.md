@@ -7,16 +7,16 @@ I've been writing small programs in rust as a way to learn the language.
 While trying to organize one of the application, I realized I didn't fully understand how the module system worked.
 
 The official docs say that if you have your code organized in a single rs file, you can just split up the module into different files and the same rules apply.
-Without understanding how the module system actually work, you might be mislead into making
+Without understanding how the module system actually works, you might be mislead into making
 false assumptions and hence run into errors that you might not understand how to solve.
 I think I must have read the [documentation](https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html) 3-4 times before I realize that just skimming over the the documentation wasn't going to work.
  
 So I went back to basics and broke down the problem.
-That, and asking a tone of questions on the Rust Discord channel, which was really helpful.
+That, and asking a ton of questions on the Rust Discord channel, which was really helpful.
 I figured I would write this up in case this helps out anyone else.
 
-I assume you already have read the basics of using modules to control scope and privacy .
-I won't cover that here. The [documentation](https://doc.rust-lang.org/book/ch07-02-defining-modules-to-control-scope-and-privacy.html) explains that very well.
+I assume you already have read the basics of using modules to control scope and privacy.
+The [documentation](https://doc.rust-lang.org/book/ch07-02-defining-modules-to-control-scope-and-privacy.html) explains that very well.
 
 Let's say you have an amazing application, and you have all the code broken down into modules, but everything is in one file.
 
@@ -99,10 +99,10 @@ pub const CONSTANT_A: u8 = 5;
 mod constants;
 
 mod foo {
-pub fn test_foo() {
-println!("test_foo");
-bar::test_bar();
-}
+    pub fn test_foo() {
+        println!("test_foo");
+        bar::test_bar();
+    }
 
     mod bar {
         pub fn test_bar() {
@@ -131,10 +131,10 @@ fn main() {
 I added comments to where I made the changes.
 
 Notice however, we have maintained our module hierarchy.
-Even though the `constants` mod is in it's own file, it still has
+Even though the `constants` mod is in its own file, it still has
 `main.rs` as its root.
 
-Let's move `foo` into it's own file next.
+Let's move `foo` into its own file next.
 
 ### foo.rs
 {{< highlight rust >}}
@@ -270,8 +270,8 @@ Our application source folder now looks like this:
 
 ```
 │   constants.rs
-│   foo.rs
 │   main.rs
+│   foo.rs
 └───foo
         bar.rs
 ```
@@ -315,5 +315,5 @@ Some key pieces to remember
 - Every module needs a root. This is why we needed to add `mod foo` and `mod constants` to `main.rs`.
 - There can only be one root. You can't add `mod foo` to multiple files.
 - Understand what your module hierarchy looks like and use `self`, `super` and `crate` accordinly.
-- Really read the [docs](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html). Then read them again.
 - When in doubt, just type out the examples in the docs.
+- Really read the [docs](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html). Then read them again.
