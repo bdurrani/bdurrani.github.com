@@ -1,0 +1,45 @@
+baseurl : "https://bilaldurrani.io"
+languageCode : "en-us"
+title : "Bilal Durrani"
+theme : "hugo-xmin"
+googleAnalytics : ""
+disqusShortname : ""
+ignoreFiles : ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
+preserveTaxonomyNames : true
+footnotereturnlinkcontents : "↩"
+disableLiveReload : true
+
+markup:
+  highlight:
+    anchorLineNos: false
+    codeFences: true
+    guessSyntax: false
+    hl_Lines: ""
+    lineAnchors: ""
+    lineNoStart: 1
+    lineNos: false
+    lineNumbersInTable: true
+    noClasses: true
+    style: monokai
+    tabWidth: 4
+
+permalinks:
+    post : "/post/:year/:month/:day/:slug/"
+    note : "/note/:year/:month/:day/:slug/"
+
+menu:
+    main:
+        - name : "Home"
+          url : "/"
+          weight : 1
+        - name : "Blog"
+          url : "/post"
+          weight : 2
+        - name : "About"
+          url : "/about"
+          weight : 3
+    
+
+params:
+    description : "A website built using Hugo"
+    footer : "&copy; Bilal Durrani 2020 | [Github](https://github.com/bdurrani)"  
